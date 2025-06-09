@@ -123,7 +123,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
 						clearTimeout(resetTimeoutRef.current);
 					}
 
-					// Reset price change indicators after 3.5 seconds
+					// Reset price change indicators after 6 seconds
 					resetTimeoutRef.current = setTimeout(() => {
 						setPriceChanges({
 							bidPriceIncreased: false,
@@ -135,7 +135,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
 							silverAskPriceIncreased: false,
 							silverAskPriceDecreased: false,
 						});
-					}, 3500);
+					}, 6000);
 				}
 
 				// Update the displayed rates
@@ -154,21 +154,21 @@ const PriceCard: React.FC<PriceCardProps> = ({
 	return (
 		<div className="space-y-0">
 			{/* Gold Card */}
-			<div className="relative bg-gradient-to-r from-red-900 to-red-700 rounded-xl h-28 overflow-visible">
+			<div className="relative bg-gradient-to-r from-red-900 to-orange-600 rounded-xl h-40 overflow-visible">
 				{/* Background Image */}
 				<div
 					className="absolute inset-0 w-full h-full rounded-xl"
 					style={{
-						backgroundImage: `url('./assets/spiral.png')`,
+						backgroundImage: `url('/spiral.png')`,
 						backgroundSize: 'cover',
 						backgroundPosition: 'center',
 						backgroundRepeat: 'no-repeat'
 					}}
 				>
 					{/* Overlay */}
-					<div className="relative flex items-center justify-center h-full overflow-visible">
+					<div className="relative flex items-center justify-center h-full overflow-visible px-6">
 						{/* Gold OZ Title */}
-						<div className="absolute -top-5 bg-yellow-500 px-4 py-2 rounded-xl">
+						<div className="absolute -top-4 bg-[#FFA62E] px-4 py-2 rounded-xl shadow-lg">
 							{!loading && currentRates?.ouncePriceUsd?.bid ? (
 								<span className="text-red-800 font-bold text-sm">GOLD OZ</span>
 							) : (
@@ -176,30 +176,38 @@ const PriceCard: React.FC<PriceCardProps> = ({
 							)}
 						</div>
 
-						{/* Vertical Line */}
-						<div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-16 bg-red-600"></div>
+						{/* Gold Bar Image */}
+						<div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+							<img
+								src="/gold-bar.png"
+								alt="Gold Bars"
+								className="w-24 h-18 object-contain"
+							/>
+						</div>
 
 						{/* Price Container */}
-						<div className="flex w-full">
+						<div className="flex w-full gap-8 mt-4 ml-20">
 							{/* BID Column */}
 							<div className="flex-1 flex flex-col items-center">
 								{!loading && currentRates?.ouncePriceUsd?.bid ? (
-									<span className="text-yellow-300 text-sm font-medium mb-1">BID</span>
+									<span className="text-yellow-300 text-lg font-bold mb-3">BID</span>
 								) : (
-									<ShimmerLoader className="w-24 h-5 mb-1" />
+									<ShimmerLoader className="w-16 h-6 mb-3" />
 								)}
-								<div className={`px-2 py-1 rounded ${priceChanges?.bidPriceIncreased ? 'bg-green-600' :
+								<div className={`px-3 py-2 rounded-lg min-w-[140px] text-center ${
+									priceChanges?.bidPriceIncreased ? 'bg-green-600' :
 									priceChanges?.bidPriceDecreased ? 'bg-red-600' : ''
-									}`}>
+								}`}>
 									{!loading && currentRates ? (
-										<span className={`text-lg font-bold ${priceChanges?.bidPriceIncreased || priceChanges?.bidPriceDecreased
-											? 'text-white'
-											: 'text-yellow-300'
-											}`}>
+										<span className={`text-2xl font-bold ${
+											priceChanges?.bidPriceIncreased || priceChanges?.bidPriceDecreased
+												? 'text-white'
+												: 'text-yellow-300'
+										}`}>
 											{currentRates?.ouncePriceUsd?.bid}
 										</span>
 									) : (
-										<ShimmerLoader className="w-24 h-7" />
+										<ShimmerLoader className="w-32 h-8" />
 									)}
 								</div>
 							</div>
@@ -207,22 +215,24 @@ const PriceCard: React.FC<PriceCardProps> = ({
 							{/* ASK Column */}
 							<div className="flex-1 flex flex-col items-center">
 								{!loading && currentRates?.ouncePriceUsd?.ask ? (
-									<span className="text-yellow-300 text-sm font-medium mb-1">ASK</span>
+									<span className="text-yellow-300 text-lg font-bold mb-3">ASK</span>
 								) : (
-									<ShimmerLoader className="w-24 h-5 mb-1" />
+									<ShimmerLoader className="w-16 h-6 mb-3" />
 								)}
-								<div className={`px-2 py-1 rounded ${priceChanges?.askPriceIncreased ? 'bg-green-600' :
+								<div className={`px-3 py-2 rounded-lg min-w-[140px] text-center ${
+									priceChanges?.askPriceIncreased ? 'bg-green-600' :
 									priceChanges?.askPriceDecreased ? 'bg-red-600' : ''
-									}`}>
+								}`}>
 									{!loading && currentRates ? (
-										<span className={`text-lg font-bold ${priceChanges?.askPriceIncreased || priceChanges?.askPriceDecreased
-											? 'text-white'
-											: 'text-yellow-300'
-											}`}>
+										<span className={`text-2xl font-bold ${
+											priceChanges?.askPriceIncreased || priceChanges?.askPriceDecreased
+												? 'text-white'
+												: 'text-yellow-300'
+										}`}>
 											{currentRates?.ouncePriceUsd?.ask}
 										</span>
 									) : (
-										<ShimmerLoader className="w-24 h-7" />
+										<ShimmerLoader className="w-32 h-8" />
 									)}
 								</div>
 							</div>
@@ -232,21 +242,21 @@ const PriceCard: React.FC<PriceCardProps> = ({
 			</div>
 
 			{/* Silver Card */}
-			<div className="relative bg-gradient-to-r from-gray-400 to-gray-200 rounded-xl h-20 -mt-2 overflow-visible">
+			<div className="relative bg-gradient-to-r from-gray-400 to-gray-200 rounded-xl h-32 -mt-2 overflow-visible">
 				{/* Background Image */}
 				<div
 					className="absolute inset-0 w-full h-full rounded-xl"
 					style={{
-						backgroundImage: `url('./assets/spiral.png')`,
+						backgroundImage: `url('/spiral.png')`,
 						backgroundSize: 'cover',
 						backgroundPosition: 'center',
 						backgroundRepeat: 'no-repeat'
 					}}
 				>
 					{/* Overlay */}
-					<div className="relative flex items-center justify-center h-full overflow-visible">
+					<div className="relative flex items-center justify-center h-full overflow-visible px-6">
 						{/* Silver OZ Title */}
-						<div className="absolute -top-3 bg-red-800 px-3 py-1 rounded-xl">
+						<div className="absolute -top-3 bg-red-800 px-3 py-1 rounded-lg shadow-lg">
 							{!loading && currentRates?.silverOuncePriceUsd?.bid ? (
 								<span className="text-white font-bold text-xs">SILVER OZ</span>
 							) : (
@@ -254,45 +264,65 @@ const PriceCard: React.FC<PriceCardProps> = ({
 							)}
 						</div>
 
-						{/* Vertical Line */}
-						<div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-0.5 h-12 bg-gray-500"></div>
+						{/* Silver Bar Image */}
+						<div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+							<img
+								src="/silver-bar.png"
+								alt="Silver Bars"
+								className="w-20 h-15 object-contain"
+							/>
+						</div>
 
 						{/* Price Container */}
-						<div className="flex w-full">
+						<div className="flex w-full gap-8 mt-2 ml-20">
 							{/* BID Column */}
 							<div className="flex-1 flex flex-col items-center">
 								{!loading && currentRates?.silverOuncePriceUsd?.bid ? (
-									<span className="text-gray-800 text-sm font-medium mb-1">BID</span>
+									<span className="text-gray-800 text-lg font-bold mb-2">BID</span>
 								) : (
-									<ShimmerLoader className="w-20 h-4 mb-1" />
+									<ShimmerLoader className="w-16 h-5 mb-2" />
 								)}
-								{!loading && currentRates ? (
-									<span className={`text-lg font-bold ${priceChanges?.silverBidPriceIncreased ? 'text-green-600' :
-										priceChanges?.silverBidPriceDecreased ? 'text-red-600' : 'text-gray-800'
+								<div className={`px-2 py-1 rounded-lg min-w-[120px] text-center ${
+									priceChanges?.silverBidPriceIncreased ? 'bg-green-600' :
+									priceChanges?.silverBidPriceDecreased ? 'bg-red-600' : ''
+								}`}>
+									{!loading && currentRates ? (
+										<span className={`text-xl font-bold ${
+											priceChanges?.silverBidPriceIncreased || priceChanges?.silverBidPriceDecreased
+												? 'text-white'
+												: 'text-gray-800'
 										}`}>
-										{currentRates?.silverOuncePriceUsd?.bid}
-									</span>
-								) : (
-									<ShimmerLoader className="w-20 h-6" />
-								)}
+											{currentRates?.silverOuncePriceUsd?.bid}
+										</span>
+									) : (
+										<ShimmerLoader className="w-24 h-6" />
+									)}
+								</div>
 							</div>
 
 							{/* ASK Column */}
 							<div className="flex-1 flex flex-col items-center">
 								{!loading && currentRates?.silverOuncePriceUsd?.ask ? (
-									<span className="text-gray-800 text-sm font-medium mb-1">ASK</span>
+									<span className="text-gray-800 text-lg font-bold mb-2">ASK</span>
 								) : (
-									<ShimmerLoader className="w-20 h-4 mb-1" />
+									<ShimmerLoader className="w-16 h-5 mb-2" />
 								)}
-								{!loading && currentRates ? (
-									<span className={`text-lg font-bold ${priceChanges?.silverAskPriceIncreased ? 'text-green-600' :
-										priceChanges?.silverAskPriceDecreased ? 'text-red-600' : 'text-gray-800'
+								<div className={`px-2 py-1 rounded-lg min-w-[120px] text-center ${
+									priceChanges?.silverAskPriceIncreased ? 'bg-green-600' :
+									priceChanges?.silverAskPriceDecreased ? 'bg-red-600' : ''
+								}`}>
+									{!loading && currentRates ? (
+										<span className={`text-xl font-bold ${
+											priceChanges?.silverAskPriceIncreased || priceChanges?.silverAskPriceDecreased
+												? 'text-white'
+												: 'text-gray-800'
 										}`}>
-										{currentRates?.silverOuncePriceUsd?.ask}
-									</span>
-								) : (
-									<ShimmerLoader className="w-20 h-6" />
-								)}
+											{currentRates?.silverOuncePriceUsd?.ask}
+										</span>
+									) : (
+										<ShimmerLoader className="w-24 h-6" />
+									)}
+								</div>
 							</div>
 						</div>
 					</div>
@@ -413,6 +443,71 @@ const TimezoneClock: React.FC<{
 				{country}
 			</div>
 			<div className="text-yellow-300 text-xs font-bold mt-1">{time}</div>
+		</div>
+	);
+};
+
+// Country Time Header Component
+const CountryTimeHeader: React.FC = () => {
+	const [indiaTime, setIndiaTime] = useState(getTimeForTimezone("Asia/Kolkata"));
+	const [ukTime, setUkTime] = useState(getTimeForTimezone("Europe/London"));
+	const [usTime, setUsTime] = useState(getTimeForTimezone("America/New_York"));
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setIndiaTime(getTimeForTimezone("Asia/Kolkata"));
+			setUkTime(getTimeForTimezone("Europe/London"));
+			setUsTime(getTimeForTimezone("America/New_York"));
+		}, 1000);
+		return () => clearInterval(interval);
+	}, []);
+
+	return (
+		<div className="flex justify-center gap-6 mb-8">
+			{/* India */}
+			<div className="flex flex-col items-center">
+				<div className="w-16 h-16 rounded-full overflow-hidden mb-3">
+					<img
+						src="/india-flag.png"
+						alt="India Flag"
+						className="w-full h-full object-cover"
+					/>
+				</div>
+				<div className="bg-[#FFCB84] text-black px-3 py-2 rounded-lg font-bold text-center min-w-[90px]">
+					<div className="text-xs mb-1">INDIA</div>
+					<div className="text-sm">{indiaTime}</div>
+				</div>
+			</div>
+
+			{/* UK */}
+			<div className="flex flex-col items-center">
+				<div className="w-16 h-16 rounded-full overflow-hidden mb-3">
+					<img
+						src="/uk-flag.png"
+						alt="UK Flag"
+						className="w-full h-full object-cover"
+					/>
+				</div>
+				<div className="bg-[#FFCB84] text-black px-3 py-2 rounded-lg font-bold text-center min-w-[90px]">
+					<div className="text-xs mb-1">UK</div>
+					<div className="text-sm">{ukTime}</div>
+				</div>
+			</div>
+
+			{/* USA */}
+			<div className="flex flex-col items-center">
+				<div className="w-16 h-16 rounded-full overflow-hidden mb-3">
+					<img
+						src="/us-flag.png"
+						alt="US Flag"
+						className="w-full h-full object-cover"
+					/>
+				</div>
+				<div className="bg-[#FFCB84] text-black px-3 py-2 rounded-lg font-bold text-center min-w-[90px]">
+					<div className="text-xs mb-1">USA</div>
+					<div className="text-sm">{usTime}</div>
+				</div>
+			</div>
 		</div>
 	);
 };
@@ -802,20 +897,24 @@ const Home: React.FC = () => {
 
 
 	return (
+		<>
 		<div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-red-900 to-red-700 text-white">
 			<div className="flex w-full h-[80vh]">
 				<div className="flex-none w-[58%] h-full p-4">
 					<div className="flex items-center justify-between w-full rounded-lg p-4 mb-4">
 						{/* Left - UAE Flag and Time */}
 						<div className="flex flex-col items-center">
-							<div className="w-16 h-16 rounded-full overflow-hidden mb-2 border-2 border-white">
+							<div className="w-16 h-16 rounded-full overflow-hidden mb-3">
 								<img
 									src="/uae-flag.png"
-									alt="Trading Logo"
-									className="h-16 w-auto"
+									alt="UAE Flag"
+									className="w-full h-full object-cover"
 								/>
 							</div>
-							<div className="text-white text-lg font-bold">{uaeTime}</div>
+							<div className="bg-[#FFCB84] text-black px-3 py-2 rounded-lg font-bold text-center min-w-[90px]">
+								<div className="text-xs mb-1">UAE</div>
+								<div className="text-sm">{uaeTime}</div>
+							</div>
 						</div>
 
 						{/* Center - Trading Image */}
@@ -853,12 +952,29 @@ const Home: React.FC = () => {
 
 
 				</div>
-				<div className="flex-none w-[42%] h-full bg-blue-600 p-4">
-					<PriceCard />
+				<div className="flex-none w-[42%] h-full  p-4">
+					<CountryTimeHeader />
+					<PriceCard rates={liveRates} loading={isLoading} />
+				</div>
+			</div>
+
+			{/* Bottom Banner */}
+			<div className="fixed bottom-4 left-4 right-4 z-50">
+				<div className="bg-[#FFCB84] rounded-full px-8 w-full h-[50px] flex items-center justify-center">
+					<div className="text-center">
+						<span className="text-black font-bold text-l">
+							Gold News: New Gold news!! New Gold news!!New Gold news!!New Gold news!!New Gold news!!New Gold news!!New Gold news!!New Go
+						</span>
+					</div>
+				</div>
+				<div className="text-center mt-2">
+					<span className="text-white text-xs">Powered by Dfin Technologies</span>
 				</div>
 			</div>
 		</div>
 
+
+		</>
 	);
 };
 
