@@ -1,5 +1,29 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/home";
+
+// Types
+interface MetalRates {
+	gramPrice: { ask: number; bid: number };
+	gramNineOneSix: { ask: number; bid: number };
+	nineNineFive: { ask: number; bid: number };
+	ouncePriceUsd: { ask: number; bid: number };
+	tripleNinePointFive: { ask: number; bid: number };
+	ttbPrice: { ask: number; bid: number };
+	silverOuncePriceUsd: { ask: number; bid: number };
+}
+
+interface PriceChanges {
+	bidPriceIncreased?: boolean;
+	bidPriceDecreased?: boolean;
+	askPriceIncreased?: boolean;
+	askPriceDecreased?: boolean;
+	silverBidPriceIncreased?: boolean;
+	silverBidPriceDecreased?: boolean;
+	silverAskPriceIncreased?: boolean;
+	silverAskPriceDecreased?: boolean;
+}
+
 
 // Types
 interface MetalRates {
@@ -23,26 +47,290 @@ interface PriceChanges {
 	silverAskPriceDecreased?: boolean;
 }
 
-// Configuration - Replace with your actual API URL and user management
+interface PriceCardProps {
+	rates?: MetalRates | null;
+	loading?: boolean;
+}
+
+// Shimmer Loader Component
+const ShimmerLoader: React.FC<{ className?: string }> = ({ className = "" }) => {
+	return (
+		<div className={`bg-gradient-to-r from-yellow-600 to-yellow-400 animate-pulse rounded ${className}`}></div>
+	);
+};
+
+const PriceCard: React.FC<PriceCardProps> = ({
+	rates = null,
+	loading = false
+}) => {
+	const [displayedRates, setDisplayedRates] = useState<MetalRates | null>(null);
+	const liveRatesRef = useRef<MetalRates | null>(null);
+	const [priceChanges, setPriceChanges] = useState<PriceChanges>({
+		bidPriceIncreased: false,
+		bidPriceDecreased: false,
+		askPriceIncreased: false,
+		askPriceDecreased: false,
+		silverBidPriceIncreased: false,
+		silverBidPriceDecreased: false,
+		silverAskPriceIncreased: false,
+		silverAskPriceDecreased: false,
+	});
+
+	const resetTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+	// Dummy data for demonstration
+	const dummyRates: MetalRates = {
+		gramPrice: { ask: 75.50, bid: 75.25 },
+		gramNineOneSix: { ask: 69.20, bid: 68.95 },
+		nineNineFive: { ask: 74.80, bid: 74.55 },
+		ouncePriceUsd: { ask: 2347.50, bid: 2345.25 },
+		tripleNinePointFive: { ask: 75.10, bid: 74.85 },
+		ttbPrice: { ask: 73.90, bid: 73.65 },
+		silverOuncePriceUsd: { ask: 31.25, bid: 31.15 },
+	};
+
+	// Use dummy data if no rates provided
+	const currentRates = rates || dummyRates;
+
+	// Update the ref with the latest rates
+	useEffect(() => {
+		if (currentRates) {
+			liveRatesRef.current = currentRates;
+		}
+	}, [currentRates]);
+
+	// Throttle UI updates
+	useEffect(() => {
+		const interval = setInterval(() => {
+			if (liveRatesRef.current) {
+				const newRates = liveRatesRef.current;
+
+				// Compare new rates with displayed rates to detect changes
+				if (displayedRates) {
+					setPriceChanges({
+						bidPriceIncreased: newRates.ouncePriceUsd?.bid > displayedRates.ouncePriceUsd?.bid,
+						bidPriceDecreased: newRates.ouncePriceUsd?.bid < displayedRates.ouncePriceUsd?.bid,
+						askPriceIncreased: newRates.ouncePriceUsd?.ask > displayedRates.ouncePriceUsd?.ask,
+						askPriceDecreased: newRates.ouncePriceUsd?.ask < displayedRates.ouncePriceUsd?.ask,
+						silverBidPriceIncreased: newRates.silverOuncePriceUsd?.bid > displayedRates.silverOuncePriceUsd?.bid,
+						silverBidPriceDecreased: newRates.silverOuncePriceUsd?.bid < displayedRates.silverOuncePriceUsd?.bid,
+						silverAskPriceIncreased: newRates.silverOuncePriceUsd?.ask > displayedRates.silverOuncePriceUsd?.ask,
+						silverAskPriceDecreased: newRates.silverOuncePriceUsd?.ask < displayedRates.silverOuncePriceUsd?.ask,
+					});
+
+					// Clear any existing timeout before setting a new one
+					if (resetTimeoutRef.current) {
+						clearTimeout(resetTimeoutRef.current);
+					}
+
+					// Reset price change indicators after 3.5 seconds
+					resetTimeoutRef.current = setTimeout(() => {
+						setPriceChanges({
+							bidPriceIncreased: false,
+							bidPriceDecreased: false,
+							askPriceIncreased: false,
+							askPriceDecreased: false,
+							silverBidPriceIncreased: false,
+							silverBidPriceDecreased: false,
+							silverAskPriceIncreased: false,
+							silverAskPriceDecreased: false,
+						});
+					}, 3500);
+				}
+
+				// Update the displayed rates
+				setDisplayedRates(newRates);
+			}
+		}, 100);
+
+		return () => {
+			clearInterval(interval);
+			if (resetTimeoutRef.current) {
+				clearTimeout(resetTimeoutRef.current);
+			}
+		};
+	}, [displayedRates]);
+
+	return (
+		<div className="space-y-0">
+			{/* Gold Card */}
+			<div className="relative bg-gradient-to-r from-red-900 to-red-700 rounded-xl h-28 overflow-visible">
+				{/* Background Image */}
+				<div
+					className="absolute inset-0 w-full h-full rounded-xl"
+					style={{
+						backgroundImage: `url('./assets/spiral.png')`,
+						backgroundSize: 'cover',
+						backgroundPosition: 'center',
+						backgroundRepeat: 'no-repeat'
+					}}
+				>
+					{/* Overlay */}
+					<div className="relative flex items-center justify-center h-full overflow-visible">
+						{/* Gold OZ Title */}
+						<div className="absolute -top-5 bg-yellow-500 px-4 py-2 rounded-xl">
+							{!loading && currentRates?.ouncePriceUsd?.bid ? (
+								<span className="text-red-800 font-bold text-sm">GOLD OZ</span>
+							) : (
+								<ShimmerLoader className="w-20 h-6" />
+							)}
+						</div>
+
+						{/* Vertical Line */}
+						<div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-16 bg-red-600"></div>
+
+						{/* Price Container */}
+						<div className="flex w-full">
+							{/* BID Column */}
+							<div className="flex-1 flex flex-col items-center">
+								{!loading && currentRates?.ouncePriceUsd?.bid ? (
+									<span className="text-yellow-300 text-sm font-medium mb-1">BID</span>
+								) : (
+									<ShimmerLoader className="w-24 h-5 mb-1" />
+								)}
+								<div className={`px-2 py-1 rounded ${priceChanges?.bidPriceIncreased ? 'bg-green-600' :
+									priceChanges?.bidPriceDecreased ? 'bg-red-600' : ''
+									}`}>
+									{!loading && currentRates ? (
+										<span className={`text-lg font-bold ${priceChanges?.bidPriceIncreased || priceChanges?.bidPriceDecreased
+											? 'text-white'
+											: 'text-yellow-300'
+											}`}>
+											{currentRates?.ouncePriceUsd?.bid}
+										</span>
+									) : (
+										<ShimmerLoader className="w-24 h-7" />
+									)}
+								</div>
+							</div>
+
+							{/* ASK Column */}
+							<div className="flex-1 flex flex-col items-center">
+								{!loading && currentRates?.ouncePriceUsd?.ask ? (
+									<span className="text-yellow-300 text-sm font-medium mb-1">ASK</span>
+								) : (
+									<ShimmerLoader className="w-24 h-5 mb-1" />
+								)}
+								<div className={`px-2 py-1 rounded ${priceChanges?.askPriceIncreased ? 'bg-green-600' :
+									priceChanges?.askPriceDecreased ? 'bg-red-600' : ''
+									}`}>
+									{!loading && currentRates ? (
+										<span className={`text-lg font-bold ${priceChanges?.askPriceIncreased || priceChanges?.askPriceDecreased
+											? 'text-white'
+											: 'text-yellow-300'
+											}`}>
+											{currentRates?.ouncePriceUsd?.ask}
+										</span>
+									) : (
+										<ShimmerLoader className="w-24 h-7" />
+									)}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Silver Card */}
+			<div className="relative bg-gradient-to-r from-gray-400 to-gray-200 rounded-xl h-20 -mt-2 overflow-visible">
+				{/* Background Image */}
+				<div
+					className="absolute inset-0 w-full h-full rounded-xl"
+					style={{
+						backgroundImage: `url('./assets/spiral.png')`,
+						backgroundSize: 'cover',
+						backgroundPosition: 'center',
+						backgroundRepeat: 'no-repeat'
+					}}
+				>
+					{/* Overlay */}
+					<div className="relative flex items-center justify-center h-full overflow-visible">
+						{/* Silver OZ Title */}
+						<div className="absolute -top-3 bg-red-800 px-3 py-1 rounded-xl">
+							{!loading && currentRates?.silverOuncePriceUsd?.bid ? (
+								<span className="text-white font-bold text-xs">SILVER OZ</span>
+							) : (
+								<ShimmerLoader className="w-16 h-4" />
+							)}
+						</div>
+
+						{/* Vertical Line */}
+						<div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-0.5 h-12 bg-gray-500"></div>
+
+						{/* Price Container */}
+						<div className="flex w-full">
+							{/* BID Column */}
+							<div className="flex-1 flex flex-col items-center">
+								{!loading && currentRates?.silverOuncePriceUsd?.bid ? (
+									<span className="text-gray-800 text-sm font-medium mb-1">BID</span>
+								) : (
+									<ShimmerLoader className="w-20 h-4 mb-1" />
+								)}
+								{!loading && currentRates ? (
+									<span className={`text-lg font-bold ${priceChanges?.silverBidPriceIncreased ? 'text-green-600' :
+										priceChanges?.silverBidPriceDecreased ? 'text-red-600' : 'text-gray-800'
+										}`}>
+										{currentRates?.silverOuncePriceUsd?.bid}
+									</span>
+								) : (
+									<ShimmerLoader className="w-20 h-6" />
+								)}
+							</div>
+
+							{/* ASK Column */}
+							<div className="flex-1 flex flex-col items-center">
+								{!loading && currentRates?.silverOuncePriceUsd?.ask ? (
+									<span className="text-gray-800 text-sm font-medium mb-1">ASK</span>
+								) : (
+									<ShimmerLoader className="w-20 h-4 mb-1" />
+								)}
+								{!loading && currentRates ? (
+									<span className={`text-lg font-bold ${priceChanges?.silverAskPriceIncreased ? 'text-green-600' :
+										priceChanges?.silverAskPriceDecreased ? 'text-red-600' : 'text-gray-800'
+										}`}>
+										{currentRates?.silverOuncePriceUsd?.ask}
+									</span>
+								) : (
+									<ShimmerLoader className="w-20 h-6" />
+								)}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+};
+
+
+
+
+// Configuration
 export const API_URL = "https://novis-api-development.dappgenie.io";
-//"https://novis-gold-api.dappgenie.io";
-//export const API_URL = "http://localhost:3006";
-// export const API_URL = "http://10.0.2.2:3006";
 export const USER_ID = "678892771483c1763703ac5f";
 
-// Utility function for date/time
-const getFormattedDateAndTime = () => {
+// Utility functions
+const getTimeForTimezone = (timezone: string) => {
 	const now = new Date();
-	const timeOptions: Intl.DateTimeFormatOptions = {
+	return now.toLocaleTimeString("en-US", {
+		timeZone: timezone,
 		hour: "2-digit",
 		minute: "2-digit",
 		hour12: true,
-	};
-	const formattedTime = now.toLocaleTimeString("en-US", timeOptions);
-	return { formattedTime };
+	});
 };
 
-// SSE Hook for real-time price updates
+const getFormattedDate = () => {
+	const now = new Date();
+	const day = now.getDate();
+	const month = now.toLocaleDateString("en-US", { month: "short" });
+	const year = now.getFullYear();
+	const weekday = now.toLocaleDateString("en-US", { weekday: "long" });
+
+	return `${day} ${month} ${year}\n${weekday}`;
+};
+
+// SSE Hook
 const useSSE = (apiUrl: string, userId: string) => {
 	const [liveRates, setLiveRates] = useState<MetalRates | null>(null);
 	const [isConnected, setIsConnected] = useState(false);
@@ -96,233 +384,302 @@ const useSSE = (apiUrl: string, userId: string) => {
 
 // Loading Component
 const PriceLoader: React.FC = () => {
-	return <div className="w-24 h-7 bg-yellow-600 rounded animate-pulse"></div>;
+	return <div className="w-20 h-6 bg-gray-400 rounded animate-pulse"></div>;
 };
 
-// Logo Header Component
-const LogoHeader: React.FC<{ showDates?: boolean }> = ({ showDates = true }) => {
-	const [dateTime, setDateTime] = useState(getFormattedDateAndTime());
+// Timezone Clock Component
+const TimezoneClock: React.FC<{
+	country: string;
+	timezone: string;
+	flag: string;
+}> = ({ country, timezone, flag }) => {
+	const [time, setTime] = useState(getTimeForTimezone(timezone));
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			setDateTime(getFormattedDateAndTime());
+			setTime(getTimeForTimezone(timezone));
 		}, 1000);
 		return () => clearInterval(interval);
-	}, []);
+	}, [timezone]);
 
 	return (
-		<div className="flex items-center justify-between w-full relative mb-14">
-			{showDates && (
-				<div className="flex flex-col items-center">
-					<div className="text-yellow-300 text-2xl mb-1">🕐</div>
-					<span className="text-yellow-300 text-xs font-bold">{dateTime.formattedTime}</span>
-				</div>
-			)}
-
-			<div className="absolute left-1/2 transform -translate-x-1/2 flex items-center">
-				<div className="w-15 h-24 bg-yellow-300 bg-opacity-10 rounded-lg flex items-center justify-center -mt-5">
-					<span className="text-yellow-300 font-bold text-xs">LOGO</span>
+		<div className="flex flex-col items-center">
+			<div className="w-12 h-12 rounded-full overflow-hidden mb-2 border-2 border-yellow-400">
+				<div className="w-full h-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-lg">
+					{flag}
 				</div>
 			</div>
-
-			{showDates && <div className="w-7"></div>}
+			<div className="bg-yellow-400 text-black px-3 py-1 rounded-lg text-xs font-bold">
+				{country}
+			</div>
+			<div className="text-yellow-300 text-xs font-bold mt-1">{time}</div>
 		</div>
 	);
 };
 
-// Price Card Component
-const PriceCard: React.FC<{
-	loading: boolean;
-	rates: MetalRates | null;
-	priceChanges: PriceChanges;
-}> = ({ loading, rates, priceChanges }) => {
+// Header Component
+const Header: React.FC = () => {
+	const [dateTime, setDateTime] = useState(getFormattedDate());
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setDateTime(getFormattedDate());
+		}, 60000);
+		return () => clearInterval(interval);
+	}, []);
+
+	const timezones = [
+		{ country: "UAE", timezone: "Asia/Dubai", flag: "🇦🇪" },
+		{ country: "INDIA", timezone: "Asia/Kolkata", flag: "🇮🇳" },
+		{ country: "UK", timezone: "Europe/London", flag: "🇬🇧" },
+		{ country: "USA", timezone: "America/New_York", flag: "🇺🇸" },
+	];
+
 	return (
-		<div className="space-y-4">
+		<div className="flex items-center justify-between w-full mb-8">
+			{/* Left timezone */}
+			<TimezoneClock {...timezones[0]} />
+
+			{/* Center content */}
+			<div className="flex flex-col items-center">
+				<div className="flex items-center mb-2">
+					<div className="text-white font-bold text-2xl mr-2">Dfin</div>
+					<div className="text-yellow-400 text-sm">TECHNOLOGIES</div>
+				</div>
+				<div className="text-center">
+					<div className="text-yellow-300 text-lg font-bold whitespace-pre-line">
+						{dateTime}
+					</div>
+				</div>
+			</div>
+
+			{/* Right timezones */}
+			<div className="flex space-x-4">
+				{timezones.slice(1).map((tz, index) => (
+					<TimezoneClock key={index} {...tz} />
+				))}
+			</div>
+		</div>
+	);
+};
+
+// Data Table Component
+const DataTable: React.FC<{
+	rates: MetalRates | null;
+	loading: boolean;
+}> = ({ rates, loading }) => {
+	const tableData = [
+		{ key: "gramPrice", label: "GRAM", weight: "1 Kg", purity: "24K" },
+		{ key: "gramNineOneSix", label: "GRAM", weight: "1 Kg", purity: "22K" },
+		{ key: "ttbPrice", label: "TTB", weight: "1 Kg", purity: "" },
+		{ key: "nineNineFive", label: "995", weight: "1 Kg", purity: "" },
+		{ key: "tripleNinePointFive", label: "999.9", weight: "1 Kg", purity: "" },
+	];
+
+	return (
+		<div className="mb-8">
+
+			{/* Table Header */}
+			<div className="bg-[#F6111C] rounded-3xl p-5 mb-2">
+				<div className="grid grid-cols-4 gap-4 text-center">
+					<div className="text-white font-bold text-sm">METAL</div>
+					<div className="text-white font-bold text-sm">WEIGHT</div>
+					<div className="text-white font-bold text-sm">BID (AED)</div>
+					<div className="text-white font-bold text-sm">ASK (AED)</div>
+				</div>
+			</div>
+
+			{/* Table Rows */}
+			<div className="space-y-2">
+				{tableData.map((item, index) => {
+					const rateData = rates?.[
+						item.key as keyof MetalRates
+					] as { bid: number; ask: number } | undefined;
+
+					return (
+						<div
+							key={index}
+							className="bg-[#FFCB84] rounded-3xl p-4 text-black"
+						>
+							<div className="grid grid-cols-4 gap-4 text-center items-center">
+								<div className="font-bold text-sm">
+									{item.label}
+									{item.purity && (
+										<span className="text-xs ml-1">{item.purity}</span>
+									)}
+								</div>
+								<div className="font-bold text-sm">{item.weight}</div>
+								<div className="font-bold text-sm">
+									{!loading && rateData ? (
+										rateData.bid.toLocaleString()
+									) : (
+										<PriceLoader />
+									)}
+								</div>
+								<div className="font-bold text-sm">
+									{!loading && rateData ? (
+										rateData.ask.toLocaleString()
+									) : (
+										<PriceLoader />
+									)}
+								</div>
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		</div>
+	);
+};
+
+// Price Cards Component
+const PriceCards: React.FC<{
+	rates: MetalRates | null;
+	loading: boolean;
+	priceChanges: PriceChanges;
+}> = ({ rates, loading, priceChanges }) => {
+	return (
+		<div className="grid grid-cols-2 gap-6 mb-8">
 			{/* Gold Card */}
-			<div className="bg-red-900 rounded-xl overflow-hidden">
-				<div className="bg-gradient-to-r from-red-900 to-red-700 p-4">
-					<div className="flex flex-col space-y-4">
-						<div className="flex items-start">
-							{!loading && rates?.ouncePriceUsd?.bid ? (
-								<h3 className="text-red-300 font-bold text-base">GOLD OZ</h3>
+			<div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-3xl p-6 relative overflow-hidden">
+				<div className="absolute top-4 right-4">
+					<div className="w-16 h-12 bg-yellow-300 rounded-lg flex items-center justify-center">
+						<span className="text-2xl">🥇</span>
+					</div>
+				</div>
+
+				<div className="mb-4">
+					<div className="bg-yellow-400 text-black px-4 py-2 rounded-2xl inline-block">
+						<span className="font-bold text-sm">GOLD OZ</span>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-2 gap-4">
+					<div>
+						<div className="text-black font-bold text-lg mb-2">BID</div>
+						<div
+							className={`text-2xl font-bold p-3 rounded-xl ${priceChanges?.bidPriceIncreased
+								? "bg-green-500 text-white"
+								: priceChanges?.bidPriceDecreased
+									? "bg-red-500 text-white"
+									: "bg-red-600 text-white"
+								}`}
+						>
+							{!loading && rates ? (
+								rates.ouncePriceUsd?.bid.toFixed(3)
 							) : (
 								<PriceLoader />
 							)}
 						</div>
+						<div className="text-black text-xs mt-1">
+							Day Low {rates?.ouncePriceUsd?.bid.toFixed(3) || "---"}
+						</div>
+					</div>
 
-						<div className="flex justify-around items-center">
-							<div className="flex flex-col items-center flex-1">
-								<span className="text-white font-bold text-sm mb-2">BID</span>
-								<div className={`rounded-lg py-2 px-3 min-w-24 text-center ${priceChanges?.bidPriceIncreased ? 'bg-green-600' :
-									priceChanges?.bidPriceDecreased ? 'bg-red-600' : 'bg-transparent'
-									}`}>
-									{!loading && rates ? (
-										<span className={`text-yellow-300 font-semibold text-lg ${priceChanges?.bidPriceIncreased || priceChanges?.bidPriceDecreased ? 'text-white' : ''
-											}`}>
-											${rates?.ouncePriceUsd?.bid}
-										</span>
-									) : (
-										<PriceLoader />
-									)}
-								</div>
-							</div>
-
-							<div className="flex flex-col items-center flex-1">
-								<span className="text-white font-bold text-sm mb-2">ASK</span>
-								<div className={`rounded-lg py-2 px-3 min-w-24 text-center ${priceChanges?.askPriceIncreased ? 'bg-green-600' :
-									priceChanges?.askPriceDecreased ? 'bg-red-600' : 'bg-transparent'
-									}`}>
-									{!loading && rates ? (
-										<span className={`text-yellow-300 font-semibold text-lg ${priceChanges?.askPriceIncreased || priceChanges?.askPriceDecreased ? 'text-white' : ''
-											}`}>
-											${rates?.ouncePriceUsd?.ask}
-										</span>
-									) : (
-										<PriceLoader />
-									)}
-								</div>
-							</div>
+					<div>
+						<div className="text-black font-bold text-lg mb-2">ASK</div>
+						<div
+							className={`text-2xl font-bold p-3 rounded-xl ${priceChanges?.askPriceIncreased
+								? "bg-green-500 text-white"
+								: priceChanges?.askPriceDecreased
+									? "bg-red-500 text-white"
+									: "bg-green-600 text-white"
+								}`}
+						>
+							{!loading && rates ? (
+								rates.ouncePriceUsd?.ask.toFixed(3)
+							) : (
+								<PriceLoader />
+							)}
+						</div>
+						<div className="text-black text-xs mt-1">
+							Day High {rates?.ouncePriceUsd?.ask.toFixed(3) || "---"}
 						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* Silver Card */}
-			<div className="bg-gray-700 rounded-xl overflow-hidden">
-				<div className="bg-gradient-to-r from-gray-700 to-gray-600 p-4">
-					<div className="flex flex-col space-y-4">
-						<div className="flex items-start">
-							{!loading && rates?.silverOuncePriceUsd?.bid ? (
-								<h3 className="text-gray-300 font-bold text-base">SILVER OZ</h3>
+			<div className="bg-gradient-to-br from-gray-400 to-gray-600 rounded-3xl p-6 relative overflow-hidden">
+				<div className="absolute top-4 right-4">
+					<div className="w-16 h-12 bg-gray-300 rounded-lg flex items-center justify-center">
+						<span className="text-2xl">🥈</span>
+					</div>
+				</div>
+
+				<div className="mb-4">
+					<div className="bg-red-600 text-white px-4 py-2 rounded-2xl inline-block">
+						<span className="font-bold text-sm">SILVER OZ</span>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-2 gap-4">
+					<div>
+						<div className="text-white font-bold text-lg mb-2">BID</div>
+						<div
+							className={`text-2xl font-bold p-3 rounded-xl ${priceChanges?.silverBidPriceIncreased
+								? "bg-green-500 text-white"
+								: priceChanges?.silverBidPriceDecreased
+									? "bg-red-500 text-white"
+									: "bg-red-600 text-white"
+								}`}
+						>
+							{!loading && rates ? (
+								rates.silverOuncePriceUsd?.bid.toFixed(3)
 							) : (
 								<PriceLoader />
 							)}
 						</div>
+						<div className="text-white text-xs mt-1">
+							Day Low {rates?.silverOuncePriceUsd?.bid.toFixed(3) || "---"}
+						</div>
+					</div>
 
-						<div className="flex justify-around items-center">
-							<div className="flex flex-col items-center flex-1">
-								<span className="text-white font-bold text-sm mb-2">BID</span>
-								<div className={`rounded-lg py-2 px-3 min-w-24 text-center ${priceChanges?.silverBidPriceIncreased ? 'bg-green-600' :
-									priceChanges?.silverBidPriceDecreased ? 'bg-red-600' : 'bg-transparent'
-									}`}>
-									{!loading && rates ? (
-										<span className="text-white font-semibold text-lg">
-											${rates?.silverOuncePriceUsd?.bid}
-										</span>
-									) : (
-										<PriceLoader />
-									)}
-								</div>
-							</div>
-
-							<div className="flex flex-col items-center flex-1">
-								<span className="text-white font-bold text-sm mb-2">ASK</span>
-								<div className={`rounded-lg py-2 px-3 min-w-24 text-center ${priceChanges?.silverAskPriceIncreased ? 'bg-green-600' :
-									priceChanges?.silverAskPriceDecreased ? 'bg-red-600' : 'bg-transparent'
-									}`}>
-									{!loading && rates ? (
-										<span className="text-white font-semibold text-lg">
-											${rates?.silverOuncePriceUsd?.ask}
-										</span>
-									) : (
-										<PriceLoader />
-									)}
-								</div>
-							</div>
+					<div>
+						<div className="text-white font-bold text-lg mb-2">ASK</div>
+						<div
+							className={`text-2xl font-bold p-3 rounded-xl ${priceChanges?.silverAskPriceIncreased
+								? "bg-green-500 text-white"
+								: priceChanges?.silverAskPriceDecreased
+									? "bg-red-500 text-white"
+									: "bg-green-600 text-white"
+								}`}
+						>
+							{!loading && rates ? (
+								rates.silverOuncePriceUsd?.ask.toFixed(3)
+							) : (
+								<PriceLoader />
+							)}
+						</div>
+						<div className="text-white text-xs mt-1">
+							Day High {rates?.silverOuncePriceUsd?.ask.toFixed(3) || "---"}
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
-	);
-};
-
-// Price Chart Component
-const PriceChart: React.FC<{
-	rates: MetalRates | null;
-	loading: boolean;
-	priceChanges: PriceChanges;
-}> = ({ rates, loading }) => {
-	const chartData = [
-		{ key: "gramPrice", label: "GRAM 24K" },
-		{ key: "gramNineOneSix", label: "GRAM 22K" },
-		{ key: "ttbPrice", label: "TTB" },
-		{ key: "nineNineFive", label: "995" },
-		{ key: "tripleNinePointFive", label: "999.5" },
-	];
-
-	return (
-		<div className="bg-red-800 rounded-xl p-4 mt-5 border border-gray-600">
-			{/* Chart Header */}
-			<div className="flex items-center py-3 border-b border-gray-600 mb-2">
-				<div className="flex-1 text-center">
-					<span className="text-yellow-300 font-bold text-sm">TYPE</span>
-				</div>
-				<div className="w-px h-full bg-gray-600 opacity-30"></div>
-				<div className="flex-1 text-center">
-					<span className="text-yellow-300 font-bold text-sm">BID</span>
-				</div>
-				<div className="w-px h-full bg-gray-600 opacity-30"></div>
-				<div className="flex-1 text-center">
-					<span className="text-yellow-300 font-bold text-sm">ASK</span>
-				</div>
-			</div>
-
-			{/* Chart Data Rows */}
-			{chartData.slice(0, 5).map((item, index) => {
-				const rateData = rates?.[item.key as keyof MetalRates] as { bid: number; ask: number } | undefined;
-
-				return (
-					<div key={index} className="flex items-center py-3 border-b border-gray-700 border-opacity-50">
-						<div className="flex-1 text-center">
-							<span className="text-white text-sm font-medium">{item.label}</span>
-						</div>
-						<div className="w-px h-full bg-gray-600 opacity-30"></div>
-						<div className="flex-1 text-center">
-							{!loading && rateData ? (
-								<span className="text-white text-sm font-semibold">
-									{rateData.bid}
-								</span>
-							) : (
-								<div className="w-16 h-5 bg-yellow-600 rounded animate-pulse mx-auto"></div>
-							)}
-						</div>
-						<div className="w-px h-full bg-gray-600 opacity-30"></div>
-						<div className="flex-1 text-center">
-							{!loading && rateData ? (
-								<span className="text-white text-sm font-semibold">
-									{rateData.ask}
-								</span>
-							) : (
-								<div className="w-16 h-5 bg-yellow-600 rounded animate-pulse mx-auto"></div>
-							)}
-						</div>
-					</div>
-				);
-			})}
 		</div>
 	);
 };
 
 // Scrolling Banner Component
-const ScrollingBanner: React.FC<{
-	primaryColor: string;
-	secondaryColor: string;
-	bannerText: string;
-}> = ({ primaryColor, secondaryColor, bannerText }) => {
+const ScrollingBanner: React.FC = () => {
 	return (
-		<div
-			className="flex items-center h-6 w-full overflow-hidden fixed bottom-0 left-0"
-			style={{ backgroundColor: primaryColor }}
-		>
+		<div className="bg-yellow-400 text-black py-3 fixed bottom-0 left-0 w-full overflow-hidden">
 			<div className="animate-marquee whitespace-nowrap">
-				<span
-					className="text-xs font-bold uppercase"
-					style={{ color: secondaryColor }}
-				>
-					{bannerText}
+				<span className="text-sm font-bold">
+					Gold News: New Gold news!! New Gold news!!New Gold news!!New Gold
+					news!!New Gold news!!New Gold news!!New Gold news!!New Go
 				</span>
 			</div>
+		</div>
+	);
+};
+
+// Footer
+const Footer: React.FC = () => {
+	return (
+		<div className="text-center py-4 mb-16">
+			<span className="text-white text-sm">Powered by Dfin Technologies</span>
 		</div>
 	);
 };
@@ -330,17 +687,50 @@ const ScrollingBanner: React.FC<{
 export function meta({ }: Route.MetaArgs) {
 	return [
 		{ title: "Live Gold & Silver Prices" },
-		{ name: "description", content: "Real-time gold and silver price tracking" },
+		{
+			name: "description",
+			content: "Real-time gold and silver price tracking",
+		},
 	];
 }
+
+
+// UAE Time Hook
+const useUAETime = () => {
+	const [time, setTime] = useState(
+		new Date().toLocaleTimeString("en-US", {
+			timeZone: "Asia/Dubai",
+			hour: "2-digit",
+			minute: "2-digit",
+			hour12: true,
+		})
+	);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setTime(
+				new Date().toLocaleTimeString("en-US", {
+					timeZone: "Asia/Dubai",
+					hour: "2-digit",
+					minute: "2-digit",
+					hour12: true,
+				})
+			);
+		}, 1000);
+
+		return () => clearInterval(interval);
+	}, []);
+
+	return time;
+};
 
 // Main Home Component
 const Home: React.FC = () => {
 	const [isLoading, setIsLoading] = useState(true);
 	const [previousRates, setPreviousRates] = useState<MetalRates | null>(null);
 	const [priceChanges, setPriceChanges] = useState<PriceChanges>({});
-	const [primaryColor] = useState("#C62127");
-	const [secondaryColor] = useState("#FFFFFF");
+	const uaeTime = useUAETime();
+	const currentDate = new Date();
 
 	// Use SSE hook for real-time price updates
 	const { liveRates } = useSSE(API_URL, USER_ID);
@@ -351,25 +741,47 @@ const Home: React.FC = () => {
 			const changes: PriceChanges = {};
 
 			// Gold price changes
-			if (liveRates.ouncePriceUsd?.bid !== previousRates.ouncePriceUsd?.bid) {
-				changes.bidPriceIncreased = liveRates.ouncePriceUsd?.bid > previousRates.ouncePriceUsd?.bid;
-				changes.bidPriceDecreased = liveRates.ouncePriceUsd?.bid < previousRates.ouncePriceUsd?.bid;
+			if (
+				liveRates.ouncePriceUsd?.bid !== previousRates.ouncePriceUsd?.bid
+			) {
+				changes.bidPriceIncreased =
+					liveRates.ouncePriceUsd?.bid > previousRates.ouncePriceUsd?.bid;
+				changes.bidPriceDecreased =
+					liveRates.ouncePriceUsd?.bid < previousRates.ouncePriceUsd?.bid;
 			}
 
-			if (liveRates.ouncePriceUsd?.ask !== previousRates.ouncePriceUsd?.ask) {
-				changes.askPriceIncreased = liveRates.ouncePriceUsd?.ask > previousRates.ouncePriceUsd?.ask;
-				changes.askPriceDecreased = liveRates.ouncePriceUsd?.ask < previousRates.ouncePriceUsd?.ask;
+			if (
+				liveRates.ouncePriceUsd?.ask !== previousRates.ouncePriceUsd?.ask
+			) {
+				changes.askPriceIncreased =
+					liveRates.ouncePriceUsd?.ask > previousRates.ouncePriceUsd?.ask;
+				changes.askPriceDecreased =
+					liveRates.ouncePriceUsd?.ask < previousRates.ouncePriceUsd?.ask;
 			}
 
 			// Silver price changes
-			if (liveRates.silverOuncePriceUsd?.bid !== previousRates.silverOuncePriceUsd?.bid) {
-				changes.silverBidPriceIncreased = liveRates.silverOuncePriceUsd?.bid > previousRates.silverOuncePriceUsd?.bid;
-				changes.silverBidPriceDecreased = liveRates.silverOuncePriceUsd?.bid < previousRates.silverOuncePriceUsd?.bid;
+			if (
+				liveRates.silverOuncePriceUsd?.bid !==
+				previousRates.silverOuncePriceUsd?.bid
+			) {
+				changes.silverBidPriceIncreased =
+					liveRates.silverOuncePriceUsd?.bid >
+					previousRates.silverOuncePriceUsd?.bid;
+				changes.silverBidPriceDecreased =
+					liveRates.silverOuncePriceUsd?.bid <
+					previousRates.silverOuncePriceUsd?.bid;
 			}
 
-			if (liveRates.silverOuncePriceUsd?.ask !== previousRates.silverOuncePriceUsd?.ask) {
-				changes.silverAskPriceIncreased = liveRates.silverOuncePriceUsd?.ask > previousRates.silverOuncePriceUsd?.ask;
-				changes.silverAskPriceDecreased = liveRates.silverOuncePriceUsd?.ask < previousRates.silverOuncePriceUsd?.ask;
+			if (
+				liveRates.silverOuncePriceUsd?.ask !==
+				previousRates.silverOuncePriceUsd?.ask
+			) {
+				changes.silverAskPriceIncreased =
+					liveRates.silverOuncePriceUsd?.ask >
+					previousRates.silverOuncePriceUsd?.ask;
+				changes.silverAskPriceDecreased =
+					liveRates.silverOuncePriceUsd?.ask <
+					previousRates.silverOuncePriceUsd?.ask;
 			}
 
 			setPriceChanges(changes);
@@ -386,46 +798,95 @@ const Home: React.FC = () => {
 		}
 	}, [liveRates]);
 
+
+
+
 	return (
-		<div className="min-h-screen bg-red-800 text-white">
-			<div className="container mx-auto px-6 py-16 pb-32">
-				<LogoHeader showDates={true} />
+		<div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-red-900 to-red-700 text-white">
+			<div className="flex w-full h-[80vh]">
+				<div className="flex-none w-[58%] h-full p-4">
+					<div className="flex items-center justify-between w-full rounded-lg p-4 mb-4">
+						{/* Left - UAE Flag and Time */}
+						<div className="flex flex-col items-center">
+							<div className="w-16 h-16 rounded-full overflow-hidden mb-2 border-2 border-white">
+								<img
+									src="/uae-flag.png"
+									alt="Trading Logo"
+									className="h-16 w-auto"
+								/>
+							</div>
+							<div className="text-white text-lg font-bold">{uaeTime}</div>
+						</div>
 
-				<div className="mb-6">
-					<PriceCard
-						loading={isLoading}
+						{/* Center - Trading Image */}
+						<div className="flex items-center">
+							<img
+								src="/dfin-logo.png"
+								alt="Trading Logo"
+								className="h-16 w-[200]"
+							/>
+							<div className="hidden text-white font-bold text-xl">TRADING</div>
+						</div>
+
+						{/* Right - Date */}
+						<div className="flex flex-col items-center text-right">
+							<div className="text-white text-lg font-bold">
+								{currentDate.toLocaleDateString("en-GB", {
+									day: "2-digit",
+									month: "short",
+									year: "numeric",
+								})}
+							</div>
+							<div className="text-white text-base">
+								{currentDate.toLocaleDateString("en-US", { weekday: "long" })}
+							</div>
+						</div>
+					</div>
+
+					<DataTable
 						rates={liveRates}
-						priceChanges={priceChanges}
+						loading={isLoading}
 					/>
+
+
+
+
+
 				</div>
-
-				<PriceChart
-					rates={liveRates}
-					loading={isLoading}
-					priceChanges={priceChanges}
-				/>
+				<div className="flex-none w-[42%] h-full bg-blue-600 p-4">
+					<PriceCard />
+				</div>
 			</div>
-
-			<ScrollingBanner
-				primaryColor={primaryColor}
-				secondaryColor={secondaryColor}
-				bannerText="Live Gold & Silver Prices - Real-time Updates via SSE"
-			/>
-
-			{/* Add custom CSS for marquee animation */}
-			<style dangerouslySetInnerHTML={{
-				__html: `
-          @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-          }
-          .animate-marquee {
-            animation: marquee 15s linear infinite;
-          }
-        `
-			}} />
 		</div>
+
 	);
 };
 
 export default Home;
+// {/* <div className="container mx-auto px-6 py-8 pb-32"> */}
+// 	{/* 	<Header /> */}
+// 	{/* 	<DataTable rates={liveRates} loading={isLoading} /> */}
+// 	{/* 	<PriceCards */}
+// 	{/* 		rates={liveRates} */}
+// 	{/* 		loading={isLoading} */}
+// 	{/* 		priceChanges={priceChanges} */}
+// 	{/* 	/> */}
+// 	{/* 	<Footer /> */}
+// 	{/* </div> */}
+// 	{/**/}
+// 	{/* <ScrollingBanner /> */}
+// 	{/**/}
+// 	{/* {/* Custom CSS for animations */} */}
+// 	{/* <style */}
+// 	{/* 	dangerouslySetInnerHTML={{ */}
+// 	{/* 		__html: ` */}
+// 	{/*        @keyframes marquee { */}
+// 	{/*          0% { transform: translateX(100%); } */}
+// 	{/*          100% { transform: translateX(-100%); } */}
+// 	{/*        } */}
+// 	{/*        .animate-marquee { */}
+// 	{/*          animation: marquee 20s linear infinite; */}
+// 	{/*        } */}
+// 	{/*      `, */}
+// 	{/* 	}} */}
+// 	{/* /> */}
