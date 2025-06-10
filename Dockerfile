@@ -1,22 +1,55 @@
-FROM node:20-alpine AS development-dependencies-env
-COPY . /app
-WORKDIR /app
-RUN npm ci
+# Use the official Bun image as base
+FROM oven/bun:1 as base
 
-FROM node:20-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
+# Set working directory
 WORKDIR /app
-RUN npm ci --omit=dev
 
-FROM node:20-alpine AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
-WORKDIR /app
-RUN npm run build
+# Copy package files (bun.lockb instead of package-lock.json)
+COPY package.json bun.lockb* ./
 
-FROM node:20-alpine
-COPY ./package.json package-lock.json /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
+# Install dependencies
+RUN bun install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN bun run build
+
+# Production stage
+FROM oven/bun:1-slim as production
+
+# Set working directory
 WORKDIR /app
-CMD ["npm", "run", "start"]
+
+# Copy package files
+COPY package.json bun.lockb* ./
+
+# Install only production dependencies
+RUN bun install --frozen-lockfile --production
+
+# Copy built application from build stage
+COPY --from=base /app/build ./build
+COPY --from=base /app/public ./public
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 bunuser
+
+# Change ownership of the app directory
+RUN chown -R bunuser:nodejs /app
+USER bunuser
+
+# Expose port
+EXPOSE 3000
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/ || exit 1
+
+# Start the application
+CMD ["bun", "run", "start"]
