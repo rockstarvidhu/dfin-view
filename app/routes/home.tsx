@@ -923,7 +923,7 @@ const AuthenticatedHome: React.FC = () => {
 
 	return (
 		<>
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-red-900 to-red-700 text-white">
+		<div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-red-900 to-red-700 text-white" style={{ fontFamily: 'Manrope, ui-sans-serif, system-ui, sans-serif' }}>
 			<div className="flex w-full h-[80vh]">
 				<div className="flex-none w-[58%] h-full p-4">
 					<div className="flex items-center justify-between w-full rounded-lg p-4 mb-4">

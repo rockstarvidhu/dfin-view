@@ -173,7 +173,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-red-800 flex flex-col items-center justify-center px-5">
+    <div className="min-h-screen bg-red-800 flex flex-col items-center justify-center px-5" style={{ fontFamily: 'Manrope, ui-sans-serif, system-ui, sans-serif' }}>
       {/* Content Wrapper */}
       <div className="flex flex-col items-center justify-center w-full max-w-sm">
         {/* Logo */}
