@@ -337,7 +337,32 @@ const PriceCard: React.FC<PriceCardProps> = ({
 
 // Configuration
 export const API_URL = "https://novis-api-development.dappgenie.io";
-export const USER_ID = "678892771483c1763703ac5f";
+export const DEFAULT_USER_ID = "654a1b92b528e35018fe028c";
+
+// Check if user is authenticated
+const isAuthenticated = (): boolean => {
+	if (typeof window !== 'undefined') {
+		return localStorage.getItem("user-id") !== null;
+	}
+	return false;
+};
+
+// Get user ID from storage or use default
+const getUserId = (): string => {
+	if (typeof window !== 'undefined') {
+		return localStorage.getItem("user-id") || DEFAULT_USER_ID;
+	}
+	return DEFAULT_USER_ID;
+};
+
+// Logout function
+const logout = (): void => {
+	if (typeof window !== 'undefined') {
+		localStorage.removeItem("user-id");
+		localStorage.removeItem("user-data");
+		window.location.href = "/login";
+	}
+};
 
 // Utility functions
 const getTimeForTimezone = (timezone: string) => {
@@ -819,8 +844,8 @@ const useUAETime = () => {
 	return time;
 };
 
-// Main Home Component
-const Home: React.FC = () => {
+// Authentication wrapper component
+const AuthenticatedHome: React.FC = () => {
 	const [isLoading, setIsLoading] = useState(true);
 	const [previousRates, setPreviousRates] = useState<MetalRates | null>(null);
 	const [priceChanges, setPriceChanges] = useState<PriceChanges>({});
@@ -828,7 +853,7 @@ const Home: React.FC = () => {
 	const currentDate = new Date();
 
 	// Use SSE hook for real-time price updates
-	const { liveRates } = useSSE(API_URL, USER_ID);
+	const { liveRates } = useSSE(API_URL, getUserId());
 
 	// Track price changes for animations
 	useEffect(() => {
@@ -976,6 +1001,45 @@ const Home: React.FC = () => {
 
 		</>
 	);
+};
+
+// Main Home Component with Authentication Check
+const Home: React.FC = () => {
+	const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+	// Check authentication on component mount
+	useEffect(() => {
+		const checkAuth = () => {
+			if (!isAuthenticated()) {
+				// Redirect to login if not authenticated
+				window.location.href = "/login";
+				return;
+			}
+			setIsCheckingAuth(false);
+		};
+
+		// Small delay to ensure localStorage is available
+		setTimeout(checkAuth, 100);
+	}, []);
+
+	// Show loading screen while checking authentication
+	if (isCheckingAuth) {
+		return (
+			<div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-red-900 to-red-700">
+				<div className="text-center">
+					<img
+						src="/dfin-logo.png"
+						alt="Dfin Technologies"
+						className="h-16 w-auto mx-auto mb-4"
+					/>
+					<div className="text-white text-lg">Loading...</div>
+				</div>
+			</div>
+		);
+	}
+
+	// Render the authenticated home component
+	return <AuthenticatedHome />;
 };
 
 export default Home;
