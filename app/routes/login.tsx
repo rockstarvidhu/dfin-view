@@ -37,7 +37,7 @@ interface LoginResponse {
 }
 
 // Constants
-export const API_URL = "http://localhost:3006";
+export const API_URL = "https://novis-api-development.dappgenie.io";
 export const DEFAULT_USER_ID = "678892771483c1763703ac5f";
 
 
