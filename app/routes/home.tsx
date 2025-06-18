@@ -423,7 +423,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
 
 
 // Configuration
-export const API_URL = "http://localhost:3006";
+export const API_URL = "https://novis-api.dfintech.io";
 export const DEFAULT_USER_ID = "654a1b92b528e35018fe028c";
 
 // Check if user is authenticated
