@@ -1,13 +1,43 @@
 import React, { useState, useEffect } from "react";
 
 // Types
+interface TvColorScheme {
+  backgroundColor?: string;
+  countryBgColor?: string;
+  countryTextColor?: string;
+  metalTableHeaderBgColor?: string;
+  metalTableHeaderTextColor?: string;
+  metalTableRowBgColor?: string;
+  metalTableRowTextColor?: string;
+  bottomBannerBgColor?: string;
+  bottomBannerTextColor?: string;
+  cardGoldOzTitleColor?: string;
+  cardGoldOzBgColor?: string;
+  cardSilverOzBgColor?: string;
+  cardSilverOzTitleColor?: string;
+  // Gold Card Gradient Colors
+  goldCardGradientColor1?: string;
+  goldCardGradientColor2?: string;
+  // Silver Card Gradient Colors
+  silverCardGradientColor1?: string;
+  silverCardGradientColor2?: string;
+  // Gold Card Text Colors
+  goldCardBidAskLabelColor?: string;
+  goldCardPriceTextColor?: string;
+  // Silver Card Text Colors
+  silverCardBidAskLabelColor?: string;
+  silverCardPriceTextColor?: string;
+}
+
 interface LoginResponse {
   id: string;
+  tvColorScheme?: TvColorScheme;
+  tvColorSchemeEnabled?: boolean;
   // Add other response fields as needed
 }
 
 // Constants
-export const API_URL = "https://novis-api-development.dappgenie.io";
+export const API_URL = "http://localhost:3006";
 export const DEFAULT_USER_ID = "678892771483c1763703ac5f";
 
 
@@ -15,6 +45,35 @@ const YELLOW_COLOR = "#FFCB84";
 const RED_THEME_COLOR = "#C62127";
 const SECONDARY_COLOR = "#FFFFFF";
 const CARD_BORDER_COLOR = "#D6D6D6";
+
+// Default TV Color Scheme
+const DEFAULT_TV_COLOR_SCHEME: TvColorScheme = {
+  backgroundColor: '#5D0004',
+  countryBgColor: '#FFCB84',
+  countryTextColor: '#4D4D4D',
+  metalTableHeaderBgColor: '#F6111C',
+  metalTableHeaderTextColor: '#FFFFFF',
+  metalTableRowBgColor: '#FFCB84',
+  metalTableRowTextColor: '#4D4D4D',
+  bottomBannerBgColor: '#FFCB84',
+  bottomBannerTextColor: '#4D4D4D',
+  cardGoldOzTitleColor: '#C62127',
+  cardGoldOzBgColor: '#FFA62E',
+  cardSilverOzBgColor: '#990C11',
+  cardSilverOzTitleColor: '#FFFFFF',
+  // Gold Card Gradient Colors (from-red-900 to-orange-600)
+  goldCardGradientColor1: '#7F1D1D', // red-900
+  goldCardGradientColor2: '#EA580C', // orange-600
+  // Silver Card Gradient Colors (from-gray-400 to-gray-200)
+  silverCardGradientColor1: '#9CA3AF', // gray-400
+  silverCardGradientColor2: '#E5E7EB', // gray-200
+  // Gold Card Text Colors
+  goldCardBidAskLabelColor: '#FDE047', // yellow-300
+  goldCardPriceTextColor: '#FDE047', // yellow-300
+  // Silver Card Text Colors
+  silverCardBidAskLabelColor: '#1F2937', // gray-800
+  silverCardPriceTextColor: '#1F2937', // gray-800
+};
 
 // Toast Component (Simple implementation)
 const Toast: React.FC<{
@@ -52,6 +111,10 @@ const Toast: React.FC<{
 class ApiService {
   async mobileLogin(payload: { companyCode?: string; deviceId: string }) {
     try {
+      console.log("=== API REQUEST DEBUG ===");
+      console.log("API URL:", `${API_URL}/auth/mobile-login`);
+      console.log("Request payload:", payload);
+
       const response = await fetch(`${API_URL}/auth/mobile-login`, {
         method: "POST",
         headers: {
@@ -60,12 +123,20 @@ class ApiService {
         body: JSON.stringify(payload),
       });
 
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
       if (!response.ok) {
-        throw new Error("Login failed");
+        const errorText = await response.text();
+        console.error("API Error Response:", errorText);
+        throw new Error(`Login failed: ${response.status} - ${errorText}`);
       }
 
-      return await response.json();
+      const jsonData = await response.json();
+      console.log("Raw API response:", jsonData);
+      return jsonData;
     } catch (error) {
+      console.error("API Service Error:", error);
       throw error;
     }
   }
@@ -124,8 +195,20 @@ const Login: React.FC = () => {
   const guestLogin = async () => {
     try {
       // Use default Dfin user ID for guest login
+      const guestData = {
+        id: DEFAULT_USER_ID,
+        type: "guest",
+        tvColorScheme: DEFAULT_TV_COLOR_SCHEME,
+        tvColorSchemeEnabled: false
+      };
+
       storage.setItem("user-id", DEFAULT_USER_ID);
-      storage.setItem("user-data", JSON.stringify({ id: DEFAULT_USER_ID, type: "guest" }));
+      storage.setItem("user-data", JSON.stringify(guestData));
+      storage.setItem("tv-color-scheme", JSON.stringify(DEFAULT_TV_COLOR_SCHEME));
+
+      // Store default company code for guest login
+      storage.setItem("company-code", "novis0");
+      storage.setItem("device-id", deviceId);
 
       showToast("Login successful. Welcome to Dfin!", "success");
 
@@ -150,18 +233,35 @@ const Login: React.FC = () => {
 
     try {
       const data: LoginResponse = await apiService.mobileLogin(payload);
-      
+
+      console.log("=== LOGIN API RESPONSE DEBUG ===");
+      console.log("Full API response:", data);
+      console.log("Response keys:", Object.keys(data));
+      console.log("tvColorScheme in response:", data.tvColorScheme);
+      console.log("Company name:", data.name);
+      console.log("Company logo:", data.logo);
+
       // Store user data
       storage.setItem("user-id", data.id);
       storage.setItem("user-data", JSON.stringify(data));
 
+      // Store company code and device ID for future refreshes
+      storage.setItem("company-code", companyCode);
+      storage.setItem("device-id", deviceId);
+
+      // Store TV color scheme (use user's custom colors or defaults)
+      const tvColorScheme = data.tvColorScheme || DEFAULT_TV_COLOR_SCHEME;
+      console.log("TV color scheme being stored:", tvColorScheme);
+      storage.setItem("tv-color-scheme", JSON.stringify(tvColorScheme));
+
       showToast("Login successful. Welcome back!", "success");
-      
+
       // Redirect to home page
       setTimeout(() => {
         window.location.href = "/";
       }, 1000);
     } catch (error) {
+      console.error("Login error:", error);
       showToast("Login failed. Please check your credentials.", "error");
     }
   };

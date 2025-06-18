@@ -1,8 +1,35 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/home";
 
 // Types
+interface TvColorScheme {
+	backgroundColor?: string;
+	countryBgColor?: string;
+	countryTextColor?: string;
+	metalTableHeaderBgColor?: string;
+	metalTableHeaderTextColor?: string;
+	metalTableRowBgColor?: string;
+	metalTableRowTextColor?: string;
+	bottomBannerBgColor?: string;
+	bottomBannerTextColor?: string;
+	cardGoldOzTitleColor?: string;
+	cardGoldOzBgColor?: string;
+	cardSilverOzBgColor?: string;
+	cardSilverOzTitleColor?: string;
+	// Gold Card Gradient Colors
+	goldCardGradientColor1?: string;
+	goldCardGradientColor2?: string;
+	// Silver Card Gradient Colors
+	silverCardGradientColor1?: string;
+	silverCardGradientColor2?: string;
+	// Gold Card Text Colors
+	goldCardBidAskLabelColor?: string;
+	goldCardPriceTextColor?: string;
+	// Silver Card Text Colors
+	silverCardBidAskLabelColor?: string;
+	silverCardPriceTextColor?: string;
+}
+
 interface MetalRates {
 	gramPrice: { ask: number; bid: number };
 	gramNineOneSix: { ask: number; bid: number };
@@ -50,6 +77,7 @@ interface PriceChanges {
 interface PriceCardProps {
 	rates?: MetalRates | null;
 	loading?: boolean;
+	tvColors?: TvColorScheme;
 }
 
 // Shimmer Loader Component
@@ -61,7 +89,8 @@ const ShimmerLoader: React.FC<{ className?: string }> = ({ className = "" }) => 
 
 const PriceCard: React.FC<PriceCardProps> = ({
 	rates = null,
-	loading = false
+	loading = false,
+	tvColors = {}
 }) => {
 	const [displayedRates, setDisplayedRates] = useState<MetalRates | null>(null);
 	const liveRatesRef = useRef<MetalRates | null>(null);
@@ -154,7 +183,12 @@ const PriceCard: React.FC<PriceCardProps> = ({
 	return (
 		<div className="space-y-0">
 			{/* Gold Card */}
-			<div className="relative bg-gradient-to-r from-red-900 to-orange-600 rounded-xl h-40 overflow-visible">
+			<div
+				className="relative rounded-t-xl h-44 overflow-visible"
+				style={{
+					background: `linear-gradient(to right, ${tvColors.goldCardGradientColor1 || '#7F1D1D'}, ${tvColors.goldCardGradientColor2 || '#EA580C'})`
+				}}
+			>
 				{/* Background Image */}
 				<div
 					className="absolute inset-0 w-full h-full rounded-xl"
@@ -166,48 +200,64 @@ const PriceCard: React.FC<PriceCardProps> = ({
 					}}
 				>
 					{/* Overlay */}
-					<div className="relative flex items-center justify-center h-full overflow-visible px-6">
+					<div className="relative flex items-center justify-center h-full overflow-visible px-8">
 						{/* Gold OZ Title */}
-						<div className="absolute -top-4 bg-[#FFA62E] px-4 py-2 rounded-xl shadow-lg">
+						<div
+							className="absolute -top-5 px-6 py-3 rounded-xl shadow-lg"
+							style={{ backgroundColor: tvColors.cardGoldOzBgColor || '#FFA62E' }}
+						>
 							{!loading && currentRates?.ouncePriceUsd?.bid ? (
-								<span className="text-red-800 font-bold text-sm">GOLD OZ</span>
+								<span
+									className="font-bold text-lg"
+									style={{ color: tvColors.cardGoldOzTitleColor || '#C62127' }}
+								>
+									GOLD OZ
+								</span>
 							) : (
-								<ShimmerLoader className="w-20 h-6" />
+								<ShimmerLoader className="w-24 h-8" />
 							)}
 						</div>
 
 						{/* Gold Bar Image */}
-						<div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+						<div className="absolute left-6 top-1/2 transform -translate-y-1/2">
 							<img
 								src="/gold-bar.png"
 								alt="Gold Bars"
-								className="w-24 h-18 object-contain"
+								className="w-32 h-24 object-contain"
 							/>
 						</div>
 
 						{/* Price Container */}
-						<div className="flex w-full gap-8 mt-4 ml-20">
+						<div className="flex w-full gap-10 mt-6 ml-28">
 							{/* BID Column */}
 							<div className="flex-1 flex flex-col items-center">
 								{!loading && currentRates?.ouncePriceUsd?.bid ? (
-									<span className="text-yellow-300 text-lg font-bold mb-3">BID</span>
+									<span
+										className="text-2xl font-bold mb-4"
+										style={{ color: tvColors.goldCardBidAskLabelColor || '#FDE047' }}
+									>
+										BID
+									</span>
 								) : (
-									<ShimmerLoader className="w-16 h-6 mb-3" />
+									<ShimmerLoader className="w-20 h-8 mb-4" />
 								)}
-								<div className={`px-3 py-2 rounded-lg min-w-[140px] text-center ${
+								<div className={`px-4 py-3 rounded-lg min-w-[160px] text-center ${
 									priceChanges?.bidPriceIncreased ? 'bg-green-600' :
 									priceChanges?.bidPriceDecreased ? 'bg-red-600' : ''
 								}`}>
 									{!loading && currentRates ? (
-										<span className={`text-2xl font-bold ${
-											priceChanges?.bidPriceIncreased || priceChanges?.bidPriceDecreased
-												? 'text-white'
-												: 'text-yellow-300'
-										}`}>
+										<span
+											className="text-3xl font-bold"
+											style={{
+												color: priceChanges?.bidPriceIncreased || priceChanges?.bidPriceDecreased
+													? '#FFFFFF'
+													: tvColors.goldCardPriceTextColor || '#FDE047'
+											}}
+										>
 											{currentRates?.ouncePriceUsd?.bid}
 										</span>
 									) : (
-										<ShimmerLoader className="w-32 h-8" />
+										<ShimmerLoader className="w-36 h-10" />
 									)}
 								</div>
 							</div>
@@ -215,24 +265,32 @@ const PriceCard: React.FC<PriceCardProps> = ({
 							{/* ASK Column */}
 							<div className="flex-1 flex flex-col items-center">
 								{!loading && currentRates?.ouncePriceUsd?.ask ? (
-									<span className="text-yellow-300 text-lg font-bold mb-3">ASK</span>
+									<span
+										className="text-2xl font-bold mb-4"
+										style={{ color: tvColors.goldCardBidAskLabelColor || '#FDE047' }}
+									>
+										ASK
+									</span>
 								) : (
-									<ShimmerLoader className="w-16 h-6 mb-3" />
+									<ShimmerLoader className="w-20 h-8 mb-4" />
 								)}
-								<div className={`px-3 py-2 rounded-lg min-w-[140px] text-center ${
+								<div className={`px-4 py-3 rounded-lg min-w-[160px] text-center ${
 									priceChanges?.askPriceIncreased ? 'bg-green-600' :
 									priceChanges?.askPriceDecreased ? 'bg-red-600' : ''
 								}`}>
 									{!loading && currentRates ? (
-										<span className={`text-2xl font-bold ${
-											priceChanges?.askPriceIncreased || priceChanges?.askPriceDecreased
-												? 'text-white'
-												: 'text-yellow-300'
-										}`}>
+										<span
+											className="text-3xl font-bold"
+											style={{
+												color: priceChanges?.askPriceIncreased || priceChanges?.askPriceDecreased
+													? '#FFFFFF'
+													: tvColors.goldCardPriceTextColor || '#FDE047'
+											}}
+										>
 											{currentRates?.ouncePriceUsd?.ask}
 										</span>
 									) : (
-										<ShimmerLoader className="w-32 h-8" />
+										<ShimmerLoader className="w-36 h-10" />
 									)}
 								</div>
 							</div>
@@ -242,7 +300,12 @@ const PriceCard: React.FC<PriceCardProps> = ({
 			</div>
 
 			{/* Silver Card */}
-			<div className="relative bg-gradient-to-r from-gray-400 to-gray-200 rounded-xl h-32 -mt-2 overflow-visible">
+			<div
+				className="relative rounded-b-xl h-36 -mt-2 overflow-visible"
+				style={{
+					background: `linear-gradient(to right, ${tvColors.silverCardGradientColor1 || '#9CA3AF'}, ${tvColors.silverCardGradientColor2 || '#E5E7EB'})`
+				}}
+			>
 				{/* Background Image */}
 				<div
 					className="absolute inset-0 w-full h-full rounded-xl"
@@ -254,48 +317,64 @@ const PriceCard: React.FC<PriceCardProps> = ({
 					}}
 				>
 					{/* Overlay */}
-					<div className="relative flex items-center justify-center h-full overflow-visible px-6">
+					<div className="relative flex items-center justify-center h-full overflow-visible px-8">
 						{/* Silver OZ Title */}
-						<div className="absolute -top-3 bg-red-800 px-3 py-1 rounded-lg shadow-lg">
+						<div
+							className="absolute -top-4 px-5 py-2 rounded-lg shadow-lg"
+							style={{ backgroundColor: tvColors.cardSilverOzBgColor || '#990C11' }}
+						>
 							{!loading && currentRates?.silverOuncePriceUsd?.bid ? (
-								<span className="text-white font-bold text-xs">SILVER OZ</span>
+								<span
+									className="font-bold text-base"
+									style={{ color: tvColors.cardSilverOzTitleColor || '#FFFFFF' }}
+								>
+									SILVER OZ
+								</span>
 							) : (
-								<ShimmerLoader className="w-16 h-4" />
+								<ShimmerLoader className="w-20 h-6" />
 							)}
 						</div>
 
 						{/* Silver Bar Image */}
-						<div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+						<div className="absolute left-6 top-1/2 transform -translate-y-1/2">
 							<img
 								src="/silver-bar.png"
 								alt="Silver Bars"
-								className="w-20 h-15 object-contain"
+								className="w-28 h-20 object-contain"
 							/>
 						</div>
 
 						{/* Price Container */}
-						<div className="flex w-full gap-8 mt-2 ml-20">
+						<div className="flex w-full gap-10 mt-4 ml-28">
 							{/* BID Column */}
 							<div className="flex-1 flex flex-col items-center">
 								{!loading && currentRates?.silverOuncePriceUsd?.bid ? (
-									<span className="text-gray-800 text-lg font-bold mb-2">BID</span>
+									<span
+										className="text-xl font-bold mb-3"
+										style={{ color: tvColors.silverCardBidAskLabelColor || '#1F2937' }}
+									>
+										BID
+									</span>
 								) : (
-									<ShimmerLoader className="w-16 h-5 mb-2" />
+									<ShimmerLoader className="w-18 h-7 mb-3" />
 								)}
-								<div className={`px-2 py-1 rounded-lg min-w-[120px] text-center ${
+								<div className={`px-3 py-2 rounded-lg min-w-[140px] text-center ${
 									priceChanges?.silverBidPriceIncreased ? 'bg-green-600' :
 									priceChanges?.silverBidPriceDecreased ? 'bg-red-600' : ''
 								}`}>
 									{!loading && currentRates ? (
-										<span className={`text-xl font-bold ${
-											priceChanges?.silverBidPriceIncreased || priceChanges?.silverBidPriceDecreased
-												? 'text-white'
-												: 'text-gray-800'
-										}`}>
+										<span
+											className="text-2xl font-bold"
+											style={{
+												color: priceChanges?.silverBidPriceIncreased || priceChanges?.silverBidPriceDecreased
+													? '#FFFFFF'
+													: tvColors.silverCardPriceTextColor || '#1F2937'
+											}}
+										>
 											{currentRates?.silverOuncePriceUsd?.bid}
 										</span>
 									) : (
-										<ShimmerLoader className="w-24 h-6" />
+										<ShimmerLoader className="w-28 h-8" />
 									)}
 								</div>
 							</div>
@@ -303,24 +382,32 @@ const PriceCard: React.FC<PriceCardProps> = ({
 							{/* ASK Column */}
 							<div className="flex-1 flex flex-col items-center">
 								{!loading && currentRates?.silverOuncePriceUsd?.ask ? (
-									<span className="text-gray-800 text-lg font-bold mb-2">ASK</span>
+									<span
+										className="text-xl font-bold mb-3"
+										style={{ color: tvColors.silverCardBidAskLabelColor || '#1F2937' }}
+									>
+										ASK
+									</span>
 								) : (
-									<ShimmerLoader className="w-16 h-5 mb-2" />
+									<ShimmerLoader className="w-18 h-7 mb-3" />
 								)}
-								<div className={`px-2 py-1 rounded-lg min-w-[120px] text-center ${
+								<div className={`px-3 py-2 rounded-lg min-w-[140px] text-center ${
 									priceChanges?.silverAskPriceIncreased ? 'bg-green-600' :
 									priceChanges?.silverAskPriceDecreased ? 'bg-red-600' : ''
 								}`}>
 									{!loading && currentRates ? (
-										<span className={`text-xl font-bold ${
-											priceChanges?.silverAskPriceIncreased || priceChanges?.silverAskPriceDecreased
-												? 'text-white'
-												: 'text-gray-800'
-										}`}>
+										<span
+											className="text-2xl font-bold"
+											style={{
+												color: priceChanges?.silverAskPriceIncreased || priceChanges?.silverAskPriceDecreased
+													? '#FFFFFF'
+													: tvColors.silverCardPriceTextColor || '#1F2937'
+											}}
+										>
 											{currentRates?.silverOuncePriceUsd?.ask}
 										</span>
 									) : (
-										<ShimmerLoader className="w-24 h-6" />
+										<ShimmerLoader className="w-28 h-8" />
 									)}
 								</div>
 							</div>
@@ -336,7 +423,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
 
 
 // Configuration
-export const API_URL = "https://novis-api-development.dappgenie.io";
+export const API_URL = "http://localhost:3006";
 export const DEFAULT_USER_ID = "654a1b92b528e35018fe028c";
 
 // Check if user is authenticated
@@ -353,6 +440,182 @@ const getUserId = (): string => {
 		return localStorage.getItem("user-id") || DEFAULT_USER_ID;
 	}
 	return DEFAULT_USER_ID;
+};
+
+// Get user data from storage
+const getUserData = (): any => {
+	if (typeof window !== 'undefined') {
+		const stored = localStorage.getItem("user-data");
+		if (stored) {
+			try {
+				return JSON.parse(stored);
+			} catch (error) {
+				console.error("Error parsing user data:", error);
+			}
+		}
+	}
+	return null;
+};
+
+// Get company code from storage
+const getCompanyCode = (): string | null => {
+	if (typeof window !== 'undefined') {
+		return localStorage.getItem("company-code");
+	}
+	return null;
+};
+
+// Refresh user data by calling mobile login API
+const refreshUserData = async (): Promise<boolean> => {
+	const companyCode = getCompanyCode();
+	if (!companyCode) {
+		console.log("No company code found, cannot refresh data");
+		return false;
+	}
+
+	try {
+		console.log("Refreshing user data for company code:", companyCode);
+		const deviceId = localStorage.getItem("device-id") || `web-${navigator.userAgent.replace(/\s+/g, '-')}-${Date.now()}`;
+
+		const response = await fetch(`${API_URL}/auth/mobile-login`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				companyCode,
+				deviceId
+			}),
+		});
+
+		if (!response.ok) {
+			console.error("Failed to refresh user data:", response.status);
+			return false;
+		}
+
+		const data = await response.json();
+		console.log("Refreshed user data:", data);
+
+		// Update stored user data
+		localStorage.setItem("user-data", JSON.stringify(data));
+		localStorage.setItem("user-id", data.id);
+
+		// Store TV color scheme
+		const tvColorScheme = data.tvColorScheme || DEFAULT_TV_COLOR_SCHEME;
+		localStorage.setItem("tv-color-scheme", JSON.stringify(tvColorScheme));
+
+		return true;
+	} catch (error) {
+		console.error("Error refreshing user data:", error);
+		return false;
+	}
+};
+
+// Logout function
+const handleLogout = () => {
+	console.log("Logging out...");
+
+	// Clear all stored data
+	localStorage.removeItem("user-id");
+	localStorage.removeItem("user-data");
+	localStorage.removeItem("tv-color-scheme");
+	localStorage.removeItem("company-code");
+	localStorage.removeItem("device-id");
+
+	// Redirect to login page
+	window.location.href = "/login";
+};
+
+// Get company logo from user data or use default
+const getCompanyLogo = (): string => {
+	const userData = getUserData();
+	if (userData?.logo) {
+		console.log("Using company logo:", userData.logo, "for company:", userData.name);
+		return userData.logo;
+	}
+	console.log("Using default logo - no company logo found");
+	return "/dfin-logo.png";
+};
+
+// Get company name from user data or use default
+const getCompanyName = (): string => {
+	const userData = getUserData();
+	return userData?.name || "Dfin Technologies";
+};
+
+// Default TV Color Scheme
+const DEFAULT_TV_COLOR_SCHEME: TvColorScheme = {
+	backgroundColor: '#5D0004',
+	countryBgColor: '#FFCB84',
+	countryTextColor: '#4D4D4D',
+	metalTableHeaderBgColor: '#F6111C',
+	metalTableHeaderTextColor: '#FFFFFF',
+	metalTableRowBgColor: '#FFCB84',
+	metalTableRowTextColor: '#4D4D4D',
+	bottomBannerBgColor: '#FFCB84',
+	bottomBannerTextColor: '#4D4D4D',
+	cardGoldOzTitleColor: '#C62127',
+	cardGoldOzBgColor: '#FFA62E',
+	cardSilverOzBgColor: '#990C11',
+	cardSilverOzTitleColor: '#FFFFFF',
+	// Gold Card Gradient Colors (from-red-900 to-orange-600)
+	goldCardGradientColor1: '#7F1D1D', // red-900
+	goldCardGradientColor2: '#EA580C', // orange-600
+	// Silver Card Gradient Colors (from-gray-400 to-gray-200)
+	silverCardGradientColor1: '#9CA3AF', // gray-400
+	silverCardGradientColor2: '#E5E7EB', // gray-200
+	// Gold Card Text Colors
+	goldCardBidAskLabelColor: '#FDE047', // yellow-300
+	goldCardPriceTextColor: '#FDE047', // yellow-300
+	// Silver Card Text Colors
+	silverCardBidAskLabelColor: '#1F2937', // gray-800
+	silverCardPriceTextColor: '#1F2937', // gray-800
+};
+
+// Get TV color scheme from user data or use default
+const getTvColorScheme = (): TvColorScheme => {
+	const userData = getUserData();
+	console.log("=== TV COLOR DEBUG ===");
+	console.log("Full user data:", userData);
+	console.log("User data keys:", userData ? Object.keys(userData) : "No user data");
+
+	if (userData?.tvColorScheme) {
+		console.log("✅ Found tvColorScheme in user data:", userData.tvColorScheme);
+		console.log("Background color from API:", userData.tvColorScheme.backgroundColor);
+
+		// The API returns tvColorScheme field, not extendedColors
+		const userColors: TvColorScheme = {
+			backgroundColor: userData.tvColorScheme.backgroundColor,
+			countryBgColor: userData.tvColorScheme.countryBgColor,
+			countryTextColor: userData.tvColorScheme.countryTextColor,
+			metalTableHeaderBgColor: userData.tvColorScheme.metalTableHeaderBgColor,
+			metalTableHeaderTextColor: userData.tvColorScheme.metalTableHeaderTextColor,
+			metalTableRowBgColor: userData.tvColorScheme.metalTableRowBgColor,
+			metalTableRowTextColor: userData.tvColorScheme.metalTableRowTextColor,
+			bottomBannerBgColor: userData.tvColorScheme.bottomBannerBgColor,
+			bottomBannerTextColor: userData.tvColorScheme.bottomBannerTextColor,
+			cardGoldOzTitleColor: userData.tvColorScheme.cardGoldOzTitleColor,
+			cardGoldOzBgColor: userData.tvColorScheme.cardGoldOzBgColor,
+			cardSilverOzBgColor: userData.tvColorScheme.cardSilverOzBgColor,
+			cardSilverOzTitleColor: userData.tvColorScheme.cardSilverOzTitleColor,
+			// New gradient and text colors
+			goldCardGradientColor1: userData.tvColorScheme.goldCardGradientColor1,
+			goldCardGradientColor2: userData.tvColorScheme.goldCardGradientColor2,
+			silverCardGradientColor1: userData.tvColorScheme.silverCardGradientColor1,
+			silverCardGradientColor2: userData.tvColorScheme.silverCardGradientColor2,
+			goldCardBidAskLabelColor: userData.tvColorScheme.goldCardBidAskLabelColor,
+			goldCardPriceTextColor: userData.tvColorScheme.goldCardPriceTextColor,
+			silverCardBidAskLabelColor: userData.tvColorScheme.silverCardBidAskLabelColor,
+			silverCardPriceTextColor: userData.tvColorScheme.silverCardPriceTextColor,
+		};
+
+		const finalColors = { ...DEFAULT_TV_COLOR_SCHEME, ...userColors };
+		console.log("Final merged colors:", finalColors);
+		console.log("Final background color:", finalColors.backgroundColor);
+		return finalColors;
+	}
+	console.log("❌ No tvColorScheme found in user data - using defaults");
+	return DEFAULT_TV_COLOR_SCHEME;
 };
 
 // Logout function
@@ -473,7 +736,7 @@ const TimezoneClock: React.FC<{
 };
 
 // Country Time Header Component
-const CountryTimeHeader: React.FC = () => {
+const CountryTimeHeader: React.FC<{ tvColors?: TvColorScheme }> = ({ tvColors = {} }) => {
 	const [indiaTime, setIndiaTime] = useState(getTimeForTimezone("Asia/Kolkata"));
 	const [ukTime, setUkTime] = useState(getTimeForTimezone("Europe/London"));
 	const [usTime, setUsTime] = useState(getTimeForTimezone("America/New_York"));
@@ -498,7 +761,13 @@ const CountryTimeHeader: React.FC = () => {
 						className="w-full h-full object-cover"
 					/>
 				</div>
-				<div className="bg-[#FFCB84] text-black px-3 py-2 rounded-lg font-bold text-center min-w-[90px]">
+				<div
+					className="px-3 py-2 rounded-lg font-bold text-center min-w-[90px]"
+					style={{
+						backgroundColor: tvColors.countryBgColor || '#FFCB84',
+						color: tvColors.countryTextColor || '#4D4D4D'
+					}}
+				>
 					<div className="text-xs mb-1">INDIA</div>
 					<div className="text-sm">{indiaTime}</div>
 				</div>
@@ -513,7 +782,13 @@ const CountryTimeHeader: React.FC = () => {
 						className="w-full h-full object-cover"
 					/>
 				</div>
-				<div className="bg-[#FFCB84] text-black px-3 py-2 rounded-lg font-bold text-center min-w-[90px]">
+				<div
+					className="px-3 py-2 rounded-lg font-bold text-center min-w-[90px]"
+					style={{
+						backgroundColor: tvColors.countryBgColor || '#FFCB84',
+						color: tvColors.countryTextColor || '#4D4D4D'
+					}}
+				>
 					<div className="text-xs mb-1">UK</div>
 					<div className="text-sm">{ukTime}</div>
 				</div>
@@ -528,7 +803,13 @@ const CountryTimeHeader: React.FC = () => {
 						className="w-full h-full object-cover"
 					/>
 				</div>
-				<div className="bg-[#FFCB84] text-black px-3 py-2 rounded-lg font-bold text-center min-w-[90px]">
+				<div
+					className="px-3 py-2 rounded-lg font-bold text-center min-w-[90px]"
+					style={{
+						backgroundColor: tvColors.countryBgColor || '#FFCB84',
+						color: tvColors.countryTextColor || '#4D4D4D'
+					}}
+				>
 					<div className="text-xs mb-1">USA</div>
 					<div className="text-sm">{usTime}</div>
 				</div>
@@ -587,7 +868,8 @@ const Header: React.FC = () => {
 const DataTable: React.FC<{
 	rates: MetalRates | null;
 	loading: boolean;
-}> = ({ rates, loading }) => {
+	tvColors: TvColorScheme;
+}> = ({ rates, loading, tvColors }) => {
 	const tableData = [
 		{ key: "gramPrice", label: "GRAM", weight: "1 Kg", purity: "24K" },
 		{ key: "gramNineOneSix", label: "GRAM", weight: "1 Kg", purity: "22K" },
@@ -600,17 +882,40 @@ const DataTable: React.FC<{
 		<div className="mb-8">
 
 			{/* Table Header */}
-			<div className="bg-[#F6111C] rounded-3xl p-5 mb-2">
+			<div
+				className="rounded-3xl p-4 mb-3"
+				style={{ backgroundColor: tvColors.metalTableHeaderBgColor || '#F6111C' }}
+			>
 				<div className="grid grid-cols-4 gap-4 text-center">
-					<div className="text-white font-bold text-sm">METAL</div>
-					<div className="text-white font-bold text-sm">WEIGHT</div>
-					<div className="text-white font-bold text-sm">BID (AED)</div>
-					<div className="text-white font-bold text-sm">ASK (AED)</div>
+					<div
+						className="font-bold text-base"
+						style={{ color: tvColors.metalTableHeaderTextColor || '#FFFFFF' }}
+					>
+						METAL
+					</div>
+					<div
+						className="font-bold text-base"
+						style={{ color: tvColors.metalTableHeaderTextColor || '#FFFFFF' }}
+					>
+						WEIGHT
+					</div>
+					<div
+						className="font-bold text-base"
+						style={{ color: tvColors.metalTableHeaderTextColor || '#FFFFFF' }}
+					>
+						BID (AED)
+					</div>
+					<div
+						className="font-bold text-base"
+						style={{ color: tvColors.metalTableHeaderTextColor || '#FFFFFF' }}
+					>
+						ASK (AED)
+					</div>
 				</div>
 			</div>
 
 			{/* Table Rows */}
-			<div className="space-y-2">
+			<div className="space-y-3">
 				{tableData.map((item, index) => {
 					const rateData = rates?.[
 						item.key as keyof MetalRates
@@ -619,7 +924,11 @@ const DataTable: React.FC<{
 					return (
 						<div
 							key={index}
-							className="bg-[#FFCB84] rounded-3xl p-4 text-black"
+							className="rounded-3xl p-4"
+							style={{
+								backgroundColor: tvColors.metalTableRowBgColor || '#FFCB84',
+								color: tvColors.metalTableRowTextColor || '#4D4D4D'
+							}}
 						>
 							<div className="grid grid-cols-4 gap-4 text-center items-center">
 								<div className="font-bold text-sm">
@@ -849,8 +1158,44 @@ const AuthenticatedHome: React.FC = () => {
 	const [isLoading, setIsLoading] = useState(true);
 	const [previousRates, setPreviousRates] = useState<MetalRates | null>(null);
 	const [priceChanges, setPriceChanges] = useState<PriceChanges>({});
+	const [tvColors, setTvColors] = useState<TvColorScheme>(DEFAULT_TV_COLOR_SCHEME);
 	const uaeTime = useUAETime();
 	const currentDate = new Date();
+
+	// Load TV color scheme on component mount and refresh user data
+	useEffect(() => {
+		const loadTvColors = () => {
+			const colors = getTvColorScheme();
+			console.log("Setting TV colors:", colors);
+			setTvColors(colors);
+		};
+
+		const initializeData = async () => {
+			// First, try to refresh user data to get latest colors
+			const refreshed = await refreshUserData();
+			if (refreshed) {
+				console.log("User data refreshed successfully");
+			} else {
+				console.log("Using cached user data");
+			}
+
+			// Load TV colors (either refreshed or cached)
+			loadTvColors();
+		};
+
+		initializeData();
+
+		// Also listen for storage changes in case user data is updated
+		const handleStorageChange = (e: StorageEvent) => {
+			if (e.key === 'user-data') {
+				console.log("User data changed, reloading TV colors");
+				loadTvColors();
+			}
+		};
+
+		window.addEventListener('storage', handleStorageChange);
+		return () => window.removeEventListener('storage', handleStorageChange);
+	}, []);
 
 	// Use SSE hook for real-time price updates
 	const { liveRates } = useSSE(API_URL, getUserId());
@@ -921,55 +1266,100 @@ const AuthenticatedHome: React.FC = () => {
 
 
 
+	// Debug log for background color
+	console.log("Current TV background color:", tvColors.backgroundColor || '#5D0004');
+
 	return (
 		<>
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-red-900 to-red-700 text-white" style={{ fontFamily: 'Manrope, ui-sans-serif, system-ui, sans-serif' }}>
-			<div className="flex w-full h-[80vh]">
-				<div className="flex-none w-[58%] h-full p-4">
-					<div className="flex items-center justify-between w-full rounded-lg p-4 mb-4">
+		<div
+			className="h-screen flex flex-col text-white relative overflow-hidden"
+			style={{
+				fontFamily: 'Manrope, ui-sans-serif, system-ui, sans-serif',
+				backgroundColor: tvColors.backgroundColor || '#5D0004'
+			}}
+		>
+			<div className="flex w-full flex-1 min-h-0 pb-24">
+				<div className="flex-none w-[58%] h-full p-6 overflow-y-auto">
+					<div className="flex items-center justify-between w-full rounded-lg p-4 mb-6">
 						{/* Left - UAE Flag and Time */}
 						<div className="flex flex-col items-center">
-							<div className="w-16 h-16 rounded-full overflow-hidden mb-3">
+							<div className="w-16 h-16 rounded-full overflow-hidden mb-2">
 								<img
 									src="/uae-flag.png"
 									alt="UAE Flag"
 									className="w-full h-full object-cover"
 								/>
 							</div>
-							<div className="bg-[#FFCB84] text-black px-3 py-2 rounded-lg font-bold text-center min-w-[90px]">
+							<div
+								className="text-black px-3 py-2 rounded-lg font-bold text-center min-w-[90px]"
+								style={{
+									backgroundColor: tvColors.countryBgColor || '#FFCB84',
+									color: tvColors.countryTextColor || '#4D4D4D'
+								}}
+							>
 								<div className="text-xs mb-1">UAE</div>
 								<div className="text-sm">{uaeTime}</div>
 							</div>
 						</div>
 
-						{/* Center - Trading Image */}
-						<div className="flex items-center">
+						{/* Logo and Trading text */}
+						<div className="flex items-center gap-2">
 							<img
 								src="/dfin-logo.png"
-								alt="Trading Logo"
-								className="h-16 w-[200]"
+								alt="Logo"
+								className="h-12"
+								onError={({ currentTarget: target }) => {
+									if (target.src !== "/dfin-logo.png") {
+										target.src = "/dfin-logo.png";
+									}
+								}}
 							/>
 							<div className="hidden text-white font-bold text-xl">TRADING</div>
 						</div>
 
-						{/* Right - Date */}
-						<div className="flex flex-col items-center text-right">
-							<div className="text-white text-lg font-bold">
-								{currentDate.toLocaleDateString("en-GB", {
-									day: "2-digit",
-									month: "short",
-									year: "numeric",
-								})}
+						{/* Right - Date and Logout */}
+						<div className="flex items-center gap-8">
+							<div className="flex flex-col items-end">
+								<div className="text-white text-lg font-bold">
+									{currentDate.toLocaleDateString("en-GB", {
+										day: "2-digit",
+										month: "short",
+										year: "numeric",
+									})}
+								</div>
+								<div className="text-white text-base">
+									{currentDate.toLocaleDateString("en-US", { weekday: "long" })}
+								</div>
 							</div>
-							<div className="text-white text-base">
-								{currentDate.toLocaleDateString("en-US", { weekday: "long" })}
-							</div>
+
+							{/* Logout Button */}
+							<button
+								onClick={handleLogout}
+								className="bg-red-600 hover:bg-red-700 text-white p-2.5 rounded-full transition-colors duration-200 shadow-lg hover:shadow-xl absolute top-4 right-4"
+								title="Logout"
+							>
+								<svg
+									width="20"
+									height="20"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+									<polyline points="16,17 21,12 16,7"/>
+									<line x1="21" y1="12" x2="9" y2="12"/>
+								</svg>
+							</button>
 						</div>
 					</div>
 
 					<DataTable
 						rates={liveRates}
 						loading={isLoading}
+						tvColors={tvColors}
 					/>
 
 
@@ -977,23 +1367,29 @@ const AuthenticatedHome: React.FC = () => {
 
 
 				</div>
-				<div className="flex-none w-[42%] h-full  p-4">
-					<CountryTimeHeader />
-					<PriceCard rates={liveRates} loading={isLoading} />
+				<div className="flex-none w-[42%] h-full p-6 overflow-y-auto">
+					<CountryTimeHeader tvColors={tvColors} />
+					<PriceCard rates={liveRates} loading={isLoading} tvColors={tvColors} />
 				</div>
 			</div>
 
 			{/* Bottom Banner */}
-			<div className="fixed bottom-4 left-4 right-4 z-50">
-				<div className="bg-[#FFCB84] rounded-full px-8 w-full h-[50px] flex items-center justify-center">
+			<div className="absolute bottom-6 left-6 right-6">
+				<div
+					className="rounded-full px-12 w-full h-[70px] flex items-center justify-center"
+					style={{ backgroundColor: tvColors.bottomBannerBgColor || '#FFCB84' }}
+				>
 					<div className="text-center">
-						<span className="text-black font-bold text-l">
+						<span
+							className="font-bold text-xl"
+							style={{ color: tvColors.bottomBannerTextColor || '#4D4D4D' }}
+						>
 							Gold News: New Gold news!! New Gold news!!New Gold news!!New Gold news!!New Gold news!!New Gold news!!New Gold news!!New Go
 						</span>
 					</div>
 				</div>
-				<div className="text-center mt-2">
-					<span className="text-white text-xs">Powered by Dfin Technologies</span>
+				<div className="text-center mt-3">
+					<span className="text-white text-sm">Powered by Dfin Technologies</span>
 				</div>
 			</div>
 		</div>
@@ -1028,9 +1424,16 @@ const Home: React.FC = () => {
 			<div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-red-900 to-red-700">
 				<div className="text-center">
 					<img
-						src="/dfin-logo.png"
-						alt="Dfin Technologies"
-						className="h-16 w-auto mx-auto mb-4"
+						src={getCompanyLogo()}
+						alt={getCompanyName()}
+						className="h-16 w-auto mx-auto mb-4 object-contain"
+						onError={(e) => {
+							// Fallback to default logo if company logo fails to load
+							const target = e.target as HTMLImageElement;
+							if (target.src !== "/dfin-logo.png") {
+								target.src = "/dfin-logo.png";
+							}
+						}}
 					/>
 					<div className="text-white text-lg">Loading...</div>
 				</div>
