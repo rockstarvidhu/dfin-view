@@ -443,7 +443,7 @@ const getUserId = (): string => {
 };
 
 // Get user data from storage
-const getUserData = (): any => {
+const getUserData = (): LoginResponse | null => {
 	if (typeof window !== 'undefined') {
 		const stored = localStorage.getItem("user-data");
 		if (stored) {
@@ -451,6 +451,7 @@ const getUserData = (): any => {
 				return JSON.parse(stored);
 			} catch (error) {
 				console.error("Error parsing user data:", error);
+				return null;
 			}
 		}
 	}
@@ -1305,13 +1306,12 @@ const AuthenticatedHome: React.FC = () => {
 						{/* Logo and Trading text */}
 						<div className="flex items-center gap-2">
 							<img
-								src="/dfin-logo.png"
+								src={getCompanyLogo()}
 								alt="Logo"
 								className="h-12"
 								onError={({ currentTarget: target }) => {
-									if (target.src !== "/dfin-logo.png") {
-										target.src = "/dfin-logo.png";
-									}
+									console.error("Failed to load company logo, falling back to default");
+									target.src = "/dfin-logo.png";
 								}}
 							/>
 							<div className="hidden text-white font-bold text-xl">TRADING</div>
