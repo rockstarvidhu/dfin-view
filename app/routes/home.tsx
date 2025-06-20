@@ -1342,7 +1342,7 @@ const AuthenticatedHome: React.FC = () => {
   return (
     <>
       <div
-        className="flex flex-col min-h-screen text-white relative overflow-hidden pt-8"
+        className="flex flex-col h-screen text-white relative overflow-hidden pt-4"
         style={{
           fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif",
           backgroundColor: tvColors.backgroundColor || "#5D0004",
@@ -1431,15 +1431,15 @@ const AuthenticatedHome: React.FC = () => {
           </button>
         </div>
 
-        <main className="flex w-full flex-1 min-h-0">
-          <div className="flex-none w-[58%] h-full p-6 overflow-y-auto">
+        <main className="flex w-full flex-1 overflow-visible">
+          <div className="flex-none w-[58%] h-full p-6 overflow-visible">
             <DataTable
               rates={liveRates}
               loading={isLoading}
               tvColors={tvColors}
             />
           </div>
-          <div className="flex-none w-[42%] h-full p-6 overflow-y-auto">
+          <div className="flex-none w-[42%] h-full p-6 overflow-visible">
             <div className="pt-4">
               <PriceCard
                 rates={liveRates}
@@ -1463,8 +1463,9 @@ const AuthenticatedHome: React.FC = () => {
                 className="font-bold text-xl"
                 style={{ color: tvColors.bottomBannerTextColor || "#4D4D4D" }}
               >
-                Gold News: New Gold news!! New Gold news!!New Gold news!!New
-                Gold news!!New Gold news!!New Gold news!!New Gold news!!New Go
+                Gold market’s closed today. It’ll be back online when trading resumes Monday morning.
+                {/* Gold News: New Gold news!! New Gold news!!New Gold news!!New
+                Gold news!!New Gold news!!New Gold news!!New Gold news!!New Go */}
               </span>
             </div>
           </div>
