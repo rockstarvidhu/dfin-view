@@ -1,6 +1,39 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/home";
 
+// TV Font Scaling Hook
+const useTVFontScale = () => {
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const calculateScale = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      
+      // Base scale for standard browser size (1280x720 for smaller reference)
+      const baseWidth = 1280;
+      const baseHeight = 720;
+      
+      // Calculate scale based on screen size
+      const widthScale = width / baseWidth;
+      const heightScale = height / baseHeight;
+      
+      // Use the smaller scale to ensure content fits, but make it more aggressive
+      const newScale = Math.min(widthScale, heightScale);
+      
+      // Apply very minimal scaling 
+      setScale(Math.max(1.02, Math.min(newScale * 1.05, 2)));
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    
+    return () => window.removeEventListener('resize', calculateScale);
+  }, []);
+
+  return scale;
+};
+
 // Types
 interface TvColorScheme {
   backgroundColor?: string;
@@ -81,6 +114,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
   loading = false,
   tvColors = {},
 }) => {
+  const fontScale = useTVFontScale();
   const [displayedRates, setDisplayedRates] = useState<MetalRates | null>(null);
   const liveRatesRef = useRef<MetalRates | null>(null);
   const [priceChanges, setPriceChanges] = useState<PriceChanges>({
@@ -214,8 +248,11 @@ const PriceCard: React.FC<PriceCardProps> = ({
             >
               {!loading && currentRates?.ouncePriceUsd?.bid ? (
                 <span
-                  className="font-bold text-lg"
-                  style={{ color: tvColors.cardGoldOzTitleColor || "#C62127" }}
+                  className="font-bold"
+                  style={{ 
+                    color: tvColors.cardGoldOzTitleColor || "#C62127",
+                    fontSize: `${1.5 * fontScale}rem`
+                  }}
                 >
                   GOLD OZ
                 </span>
@@ -239,9 +276,10 @@ const PriceCard: React.FC<PriceCardProps> = ({
               <div className="flex-1 flex flex-col items-center">
                 {!loading && currentRates?.ouncePriceUsd?.bid ? (
                   <span
-                    className="text-3xl font-bold mb-4"
+                    className="font-bold mb-4"
                     style={{
                       color: tvColors.goldCardBidAskLabelColor || "#FDE047",
+                      fontSize: `${1.875 * fontScale}rem`
                     }}
                   >
                     BID
@@ -260,13 +298,14 @@ const PriceCard: React.FC<PriceCardProps> = ({
                 >
                   {!loading && currentRates ? (
                     <span
-                      className="text-4xl font-bold"
+                      className="font-bold"
                       style={{
                         color:
                           priceChanges?.bidPriceIncreased ||
                           priceChanges?.bidPriceDecreased
                             ? "#FFFFFF"
                             : tvColors.goldCardPriceTextColor || "#FDE047",
+                        fontSize: `${2.25 * fontScale}rem`
                       }}
                     >
                       {currentRates?.ouncePriceUsd?.bid}
@@ -281,9 +320,10 @@ const PriceCard: React.FC<PriceCardProps> = ({
               <div className="flex-1 flex flex-col items-center">
                 {!loading && currentRates?.ouncePriceUsd?.ask ? (
                   <span
-                    className="text-3xl font-bold mb-4"
+                    className="font-bold mb-4"
                     style={{
                       color: tvColors.goldCardBidAskLabelColor || "#FDE047",
+                      fontSize: `${1.875 * fontScale}rem`
                     }}
                   >
                     ASK
@@ -302,13 +342,14 @@ const PriceCard: React.FC<PriceCardProps> = ({
                 >
                   {!loading && currentRates ? (
                     <span
-                      className="text-4xl font-bold"
+                      className="font-bold"
                       style={{
                         color:
                           priceChanges?.askPriceIncreased ||
                           priceChanges?.askPriceDecreased
                             ? "#FFFFFF"
                             : tvColors.goldCardPriceTextColor || "#FDE047",
+                        fontSize: `${2.25 * fontScale}rem`
                       }}
                     >
                       {currentRates?.ouncePriceUsd?.ask}
@@ -354,9 +395,10 @@ const PriceCard: React.FC<PriceCardProps> = ({
             >
               {!loading && currentRates?.silverOuncePriceUsd?.bid ? (
                 <span
-                  className="font-bold text-base"
+                  className="font-bold"
                   style={{
                     color: tvColors.cardSilverOzTitleColor || "#FFFFFF",
+                    fontSize: `${1 * fontScale}rem`
                   }}
                 >
                   SILVER OZ
@@ -381,9 +423,10 @@ const PriceCard: React.FC<PriceCardProps> = ({
               <div className="flex-1 flex flex-col items-center">
                 {!loading && currentRates?.silverOuncePriceUsd?.bid ? (
                   <span
-                    className="text-2xl font-bold mb-3"
+                    className="font-bold mb-3"
                     style={{
                       color: tvColors.silverCardBidAskLabelColor || "#1F2937",
+                      fontSize: `${1.5 * fontScale}rem`
                     }}
                   >
                     BID
@@ -402,13 +445,14 @@ const PriceCard: React.FC<PriceCardProps> = ({
                 >
                   {!loading && currentRates ? (
                     <span
-                      className="text-3xl font-bold"
+                      className="font-bold"
                       style={{
                         color:
                           priceChanges?.silverBidPriceIncreased ||
                           priceChanges?.silverBidPriceDecreased
                             ? "#FFFFFF"
                             : tvColors.silverCardPriceTextColor || "#1F2937",
+                        fontSize: `${1.875 * fontScale}rem`
                       }}
                     >
                       {currentRates?.silverOuncePriceUsd?.bid}
@@ -423,9 +467,10 @@ const PriceCard: React.FC<PriceCardProps> = ({
               <div className="flex-1 flex flex-col items-center">
                 {!loading && currentRates?.silverOuncePriceUsd?.ask ? (
                   <span
-                    className="text-2xl font-bold mb-3"
+                    className="font-bold mb-3"
                     style={{
                       color: tvColors.silverCardBidAskLabelColor || "#1F2937",
+                      fontSize: `${1.5 * fontScale}rem`
                     }}
                   >
                     ASK
@@ -444,13 +489,14 @@ const PriceCard: React.FC<PriceCardProps> = ({
                 >
                   {!loading && currentRates ? (
                     <span
-                      className="text-3xl font-bold"
+                      className="font-bold"
                       style={{
                         color:
                           priceChanges?.silverAskPriceIncreased ||
                           priceChanges?.silverAskPriceDecreased
                             ? "#FFFFFF"
                             : tvColors.silverCardPriceTextColor || "#1F2937",
+                        fontSize: `${1.875 * fontScale}rem`
                       }}
                     >
                       {currentRates?.silverOuncePriceUsd?.ask}
@@ -801,6 +847,7 @@ const TimezoneClock: React.FC<{
 const CountryTimeHeader: React.FC<{ tvColors?: TvColorScheme }> = ({
   tvColors = {},
 }) => {
+  const fontScale = useTVFontScale();
   const [indiaTime, setIndiaTime] = useState(
     getTimeForTimezone("Asia/Kolkata")
   );
@@ -834,8 +881,8 @@ const CountryTimeHeader: React.FC<{ tvColors?: TvColorScheme }> = ({
             color: tvColors.countryTextColor || "#4D4D4D",
           }}
         >
-          <div className="text-xs mb-1">INDIA</div>
-          <div className="text-sm">{indiaTime}</div>
+          <div style={{ fontSize: `${0.75 * fontScale}rem`, marginBottom: "0.25rem" }}>INDIA</div>
+          <div style={{ fontSize: `${0.875 * fontScale}rem` }}>{indiaTime}</div>
         </div>
       </div>
 
@@ -855,8 +902,8 @@ const CountryTimeHeader: React.FC<{ tvColors?: TvColorScheme }> = ({
             color: tvColors.countryTextColor || "#4D4D4D",
           }}
         >
-          <div className="text-xs mb-1">UK</div>
-          <div className="text-sm">{ukTime}</div>
+          <div style={{ fontSize: `${0.75 * fontScale}rem`, marginBottom: "0.25rem" }}>UK</div>
+          <div style={{ fontSize: `${0.875 * fontScale}rem` }}>{ukTime}</div>
         </div>
       </div>
 
@@ -876,8 +923,8 @@ const CountryTimeHeader: React.FC<{ tvColors?: TvColorScheme }> = ({
             color: tvColors.countryTextColor || "#4D4D4D",
           }}
         >
-          <div className="text-xs mb-1">USA</div>
-          <div className="text-sm">{usTime}</div>
+          <div style={{ fontSize: `${0.75 * fontScale}rem`, marginBottom: "0.25rem" }}>USA</div>
+          <div style={{ fontSize: `${0.875 * fontScale}rem` }}>{usTime}</div>
         </div>
       </div>
     </div>
@@ -938,6 +985,7 @@ const DataTable: React.FC<{
   loading: boolean;
   tvColors: TvColorScheme;
 }> = ({ rates, loading, tvColors }) => {
+  const fontScale = useTVFontScale();
   const tableData = [
     { key: "gramNineOneSix", label: "GRAM", weight: "1GM", purity: "22K" },
     { key: "gramPrice", label: "GRAM", weight: "1GM", purity: "24K" },
@@ -958,26 +1006,38 @@ const DataTable: React.FC<{
       >
         <div className="grid grid-cols-4 gap-4 text-center">
           <div
-            className="font-bold text-lg"
-            style={{ color: tvColors.metalTableHeaderTextColor || "#FFFFFF" }}
+            className="font-bold"
+            style={{ 
+              color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
+              fontSize: `${1.125 * fontScale}rem`
+            }}
           >
             METAL
           </div>
           <div
-            className="font-bold text-lg"
-            style={{ color: tvColors.metalTableHeaderTextColor || "#FFFFFF" }}
+            className="font-bold"
+            style={{ 
+              color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
+              fontSize: `${1.125 * fontScale}rem`
+            }}
           >
             WEIGHT
           </div>
           <div
-            className="font-bold text-lg"
-            style={{ color: tvColors.metalTableHeaderTextColor || "#FFFFFF" }}
+            className="font-bold"
+            style={{ 
+              color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
+              fontSize: `${1.125 * fontScale}rem`
+            }}
           >
             BID (AED)
           </div>
           <div
-            className="font-bold text-lg"
-            style={{ color: tvColors.metalTableHeaderTextColor || "#FFFFFF" }}
+            className="font-bold"
+            style={{ 
+              color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
+              fontSize: `${1.125 * fontScale}rem`
+            }}
           >
             ASK (AED)
           </div>
@@ -1002,21 +1062,21 @@ const DataTable: React.FC<{
               }}
             >
               <div className="grid grid-cols-4 gap-4 text-center items-center">
-                <div className="font-bold text-lg">
+                <div className="font-bold" style={{ fontSize: `${1.125 * fontScale}rem` }}>
                   {item.label}
                   {item.purity && (
-                    <span className="text-base ml-1">{item.purity}</span>
+                    <span className="ml-1" style={{ fontSize: `${1 * fontScale}rem` }}>{item.purity}</span>
                   )}
                 </div>
-                <div className="font-bold text-lg">{item.weight}</div>
-                <div className="font-bold text-lg">
+                <div className="font-bold" style={{ fontSize: `${1.125 * fontScale}rem` }}>{item.weight}</div>
+                <div className="font-bold" style={{ fontSize: `${1.125 * fontScale}rem` }}>
                   {!loading && rateData ? (
                     rateData.bid.toLocaleString()
                   ) : (
                     <PriceLoader />
                   )}
                 </div>
-                <div className="font-bold text-lg">
+                <div className="font-bold" style={{ fontSize: `${1.125 * fontScale}rem` }}>
                   {!loading && rateData ? (
                     rateData.ask.toLocaleString()
                   ) : (
@@ -1231,6 +1291,7 @@ const useUAETime = () => {
 
 // Authentication wrapper component
 const AuthenticatedHome: React.FC = () => {
+  const fontScale = useTVFontScale();
   const [isLoading, setIsLoading] = useState(true);
   const [previousRates, setPreviousRates] = useState<MetalRates | null>(null);
   const [priceChanges, setPriceChanges] = useState<PriceChanges>({});
@@ -1395,8 +1456,8 @@ const AuthenticatedHome: React.FC = () => {
                   color: tvColors.countryTextColor || "#4D4D4D",
                 }}
               >
-                <div className="text-xs mb-1">UAE</div>
-                <div className="text-sm">{uaeTime}</div>
+                <div style={{ fontSize: `${0.75 * fontScale}rem`, marginBottom: "0.25rem" }}>UAE</div>
+                <div style={{ fontSize: `${0.875 * fontScale}rem` }}>{uaeTime}</div>
               </div>
             </div>
 
@@ -1417,14 +1478,14 @@ const AuthenticatedHome: React.FC = () => {
 
             {/* Date - End */}
             <div className="flex flex-col items-end">
-              <div className="text-white text-lg font-bold">
+              <div className="text-white font-bold" style={{ fontSize: `${1.125 * fontScale}rem` }}>
                 {currentDate.toLocaleDateString("en-GB", {
                   day: "2-digit",
                   month: "short",
                   year: "numeric",
                 })}
               </div>
-              <div className="text-white text-base">
+              <div className="text-white" style={{ fontSize: `${1 * fontScale}rem` }}>
                 {currentDate.toLocaleDateString("en-US", { weekday: "long" })}
               </div>
             </div>
@@ -1468,8 +1529,11 @@ const AuthenticatedHome: React.FC = () => {
           >
             <div className="text-center">
               <span
-                className="font-bold text-xl"
-                style={{ color: tvColors.bottomBannerTextColor || "#4D4D4D" }}
+                className="font-bold"
+                style={{ 
+                  color: tvColors.bottomBannerTextColor || "#4D4D4D",
+                  fontSize: `${1.25 * fontScale}rem`
+                }}
               >
                 Gold market’s closed today. It’ll be back online when trading resumes Monday morning.
                 {/* Gold News: New Gold news!! New Gold news!!New Gold news!!New
