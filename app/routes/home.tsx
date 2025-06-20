@@ -185,11 +185,12 @@ const PriceCard: React.FC<PriceCardProps> = ({
     <div className="space-y-0">
       {/* Gold Card */}
       <div
-        className="relative rounded-t-xl h-44 overflow-visible"
+        className="relative rounded-t-xl overflow-visible"
         style={{
           background: `linear-gradient(to right, ${
             tvColors.goldCardGradientColor1 || "#7F1D1D"
           }, ${tvColors.goldCardGradientColor2 || "#EA580C"})`,
+          height: "28vh",
         }}
       >
         {/* Background Image */}
@@ -324,11 +325,12 @@ const PriceCard: React.FC<PriceCardProps> = ({
 
       {/* Silver Card */}
       <div
-        className="relative rounded-b-xl h-36 -mt-2 overflow-visible"
+        className="relative rounded-b-xl -mt-2 overflow-visible"
         style={{
           background: `linear-gradient(to right, ${
             tvColors.silverCardGradientColor1 || "#9CA3AF"
           }, ${tvColors.silverCardGradientColor2 || "#E5E7EB"})`,
+          height: "23vh",
         }}
       >
         {/* Background Image */}
@@ -815,7 +817,7 @@ const CountryTimeHeader: React.FC<{ tvColors?: TvColorScheme }> = ({
   }, []);
 
   return (
-    <div className="flex justify-between w-full">
+    <div className="flex justify-around w-full items-end">
       {/* India */}
       <div className="flex flex-col items-center">
         <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
@@ -945,12 +947,13 @@ const DataTable: React.FC<{
   ];
 
   return (
-    <div className="mb-8">
+    <div className="h-full flex flex-col">
       {/* Table Header */}
       <div
         className="rounded-3xl p-4 mb-3"
         style={{
           backgroundColor: tvColors.metalTableHeaderBgColor || "#F6111C",
+          height: "8vh",
         }}
       >
         <div className="grid grid-cols-4 gap-4 text-center">
@@ -982,7 +985,7 @@ const DataTable: React.FC<{
       </div>
 
       {/* Table Rows */}
-      <div className="space-y-3">
+      <div className="flex flex-col space-y-3 flex-1">
         {tableData.map((item, index) => {
           const rateData = rates?.[item.key as keyof MetalRates] as
             | { bid: number; ask: number }
@@ -991,10 +994,11 @@ const DataTable: React.FC<{
           return (
             <div
               key={index}
-              className="rounded-3xl p-4"
+              className="rounded-3xl p-4 flex-1"
               style={{
                 backgroundColor: tvColors.metalTableRowBgColor || "#FFCB84",
                 color: tvColors.metalTableRowTextColor || "#4D4D4D",
+                height: "9vh",
               }}
             >
               <div className="grid grid-cols-4 gap-4 text-center items-center">
@@ -1342,16 +1346,39 @@ const AuthenticatedHome: React.FC = () => {
   return (
     <>
       <div
-        className="flex flex-col h-screen text-white relative overflow-hidden pt-4"
+        className="flex flex-col h-screen text-white relative overflow-hidden "
         style={{
           fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif",
           backgroundColor: tvColors.backgroundColor || "#5D0004",
         }}
       >
+        {/* Power Button */}
+        <div className="flex justify-end px-6 pt-2">
+          <button
+            onClick={handleLogout}
+            className="text-white hover:text-gray-300 p-3 transition-colors duration-200 z-50 cursor-pointer"
+            title="Power Off"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+              <line x1="12" y1="2" x2="12" y2="12" />
+            </svg>
+          </button>
+        </div>
+
         {/* Header Section with all flags aligned */}
-        <div className="flex items-start w-full px-6 pt-6 pb-4">
+        <div className="flex items-end w-full px-6" style={{height: "16vh", paddingTop: "3vh"}}>
           {/* Left Side Container - matching price chart width exactly */}
-          <div className="flex items-start justify-between w-[58%] pr-6">
+          <div className="flex items-end justify-between w-[58%] pr-6">
             {/* UAE Flag - Start */}
             <div className="flex flex-col items-center">
               <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
@@ -1407,40 +1434,20 @@ const AuthenticatedHome: React.FC = () => {
           <div className="w-[42%] pl-6">
             <CountryTimeHeader tvColors={tvColors} />
           </div>
-
-          {/* Logout Button - Hidden for now */}
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white p-2.5 rounded-full transition-colors duration-200 shadow-lg hover:shadow-xl absolute top-4 right-4"
-            title="Logout"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16,17 21,12 16,7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </button>
         </div>
 
-        <main className="flex w-full flex-1 overflow-visible">
+        <main className="flex w-full overflow-visible" style={{height: "64vh", marginTop: "3vh"}}>
           <div className="flex-none w-[58%] h-full p-6 overflow-visible">
-            <DataTable
-              rates={liveRates}
-              loading={isLoading}
-              tvColors={tvColors}
-            />
+            <div style={{marginTop: "-0.5rem"}}>
+              <DataTable
+                rates={liveRates}
+                loading={isLoading}
+                tvColors={tvColors}
+              />
+            </div>
           </div>
           <div className="flex-none w-[42%] h-full p-6 overflow-visible">
-            <div className="pt-4">
+            <div className="pt-2">
               <PriceCard
                 rates={liveRates}
                 loading={isLoading}
@@ -1451,11 +1458,12 @@ const AuthenticatedHome: React.FC = () => {
         </main>
 
         {/* Bottom Banner */}
-        <footer className="mt-auto px-6 pb-6">
+        <footer className="px-6" style={{height: "17vh", display: "flex", flexDirection: "column", justifyContent: "center"}}>
           <div
-            className="rounded-full px-12 w-full h-[70px] flex items-center justify-center"
+            className="rounded-full px-12 w-full flex items-center justify-center"
             style={{
               backgroundColor: tvColors.bottomBannerBgColor || "#FFCB84",
+              height: "9vh",
             }}
           >
             <div className="text-center">
@@ -1469,7 +1477,7 @@ const AuthenticatedHome: React.FC = () => {
               </span>
             </div>
           </div>
-          <div className="text-center mt-3">
+          <div className="text-center" style={{marginTop: "1.5vh"}}>
             <span className="text-white text-sm">
               Powered by Dfin Technologies LLC
             </span>
