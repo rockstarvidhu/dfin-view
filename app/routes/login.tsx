@@ -269,7 +269,7 @@ const Login: React.FC = () => {
   // Handle input change
   const handleInputChange = (value: string) => {
     setCompanyCode(value);
-    setIsSubmitBtnActive(value.length > 5);
+    setIsSubmitBtnActive(value.length > 3);
   };
 
   return (
