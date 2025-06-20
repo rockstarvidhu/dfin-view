@@ -1342,7 +1342,7 @@ const AuthenticatedHome: React.FC = () => {
   return (
     <>
       <div
-        className="h-screen flex flex-col text-white relative overflow-hidden pt-8"
+        className="flex flex-col min-h-screen text-white relative overflow-hidden pt-8"
         style={{
           fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif",
           backgroundColor: tvColors.backgroundColor || "#5D0004",
@@ -1431,7 +1431,7 @@ const AuthenticatedHome: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex w-full flex-1 min-h-0 pb-24">
+        <main className="flex w-full flex-1 min-h-0">
           <div className="flex-none w-[58%] h-full p-6 overflow-y-auto">
             <DataTable
               rates={liveRates}
@@ -1448,10 +1448,10 @@ const AuthenticatedHome: React.FC = () => {
               />
             </div>
           </div>
-        </div>
+        </main>
 
         {/* Bottom Banner */}
-        <div className="absolute bottom-6 left-6 right-6">
+        <footer className="mt-auto px-6 pb-6">
           <div
             className="rounded-full px-12 w-full h-[70px] flex items-center justify-center"
             style={{
@@ -1473,7 +1473,7 @@ const AuthenticatedHome: React.FC = () => {
               Powered by Dfin Technologies LLC
             </span>
           </div>
-        </div>
+        </footer>
       </div>
     </>
   );
