@@ -224,7 +224,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
           background: `linear-gradient(to right, ${
             tvColors.goldCardGradientColor1 || "#7F1D1D"
           }, ${tvColors.goldCardGradientColor2 || "#EA580C"})`,
-          height: "28vh",
+          height: "26vh",
         }}
       >
         {/* Background Image */}
@@ -371,7 +371,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
           background: `linear-gradient(to right, ${
             tvColors.silverCardGradientColor1 || "#9CA3AF"
           }, ${tvColors.silverCardGradientColor2 || "#E5E7EB"})`,
-          height: "23vh",
+          height: "21vh",
         }}
       >
         {/* Background Image */}
