@@ -224,7 +224,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
           background: `linear-gradient(to right, ${
             tvColors.goldCardGradientColor1 || "#7F1D1D"
           }, ${tvColors.goldCardGradientColor2 || "#EA580C"})`,
-          height: "26vh",
+          height: "23vh",
         }}
       >
         {/* Background Image */}
@@ -241,7 +241,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
           <div className="relative flex items-center justify-center h-full overflow-visible px-8">
             {/* Gold OZ Title */}
             <div
-              className="absolute -top-5 px-6 py-3 rounded-xl shadow-lg"
+              className="absolute -top-5 px-12 py-2 rounded-full shadow-lg"
               style={{
                 backgroundColor: tvColors.cardGoldOzBgColor || "#FFA62E",
               }}
@@ -251,7 +251,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
                   className="font-bold"
                   style={{ 
                     color: tvColors.cardGoldOzTitleColor || "#C62127",
-                    fontSize: `${1.5 * fontScale}rem`
+                    fontSize: `${0.875 * fontScale}rem`
                   }}
                 >
                   GOLD OZ
@@ -266,29 +266,31 @@ const PriceCard: React.FC<PriceCardProps> = ({
               <img
                 src="/gold-bar.png"
                 alt="Gold Bars"
-                className="w-32 h-24 object-contain"
+                className="w-26 h-20 object-contain"
               />
             </div>
 
             {/* Price Container */}
-            <div className="flex w-full gap-10 mt-6 ml-28">
+            <div className="flex w-full gap-8 mt-2 ml-28">
               {/* BID Column */}
-              <div className="flex-1 flex flex-col items-center">
-                {!loading && currentRates?.ouncePriceUsd?.bid ? (
-                  <span
-                    className="font-bold mb-4"
-                    style={{
-                      color: tvColors.goldCardBidAskLabelColor || "#FDE047",
-                      fontSize: `${1.875 * fontScale}rem`
-                    }}
-                  >
-                    BID
-                  </span>
-                ) : (
-                  <ShimmerLoader className="w-20 h-8 mb-4" />
-                )}
+              <div className="flex-1">
+                <div className="mb-3">
+                  {!loading && currentRates?.ouncePriceUsd?.bid ? (
+                    <span
+                      className="font-bold block"
+                      style={{
+                        color: tvColors.goldCardBidAskLabelColor || "#FDE047",
+                        fontSize: `${1.5 * fontScale}rem`
+                      }}
+                    >
+                      BID
+                    </span>
+                  ) : (
+                    <ShimmerLoader className="w-16 h-6" />
+                  )}
+                </div>
                 <div
-                  className={`px-4 py-3 rounded-lg min-w-[160px] text-center ${
+                  className={`px-4 py-1 rounded text-center w-full ${
                     priceChanges?.bidPriceIncreased
                       ? "bg-green-600"
                       : priceChanges?.bidPriceDecreased
@@ -298,41 +300,41 @@ const PriceCard: React.FC<PriceCardProps> = ({
                 >
                   {!loading && currentRates ? (
                     <span
-                      className="font-bold"
+                      className="font-bold font-mono block"
                       style={{
-                        color:
-                          priceChanges?.bidPriceIncreased ||
-                          priceChanges?.bidPriceDecreased
-                            ? "#FFFFFF"
-                            : tvColors.goldCardPriceTextColor || "#FDE047",
-                        fontSize: `${2.25 * fontScale}rem`
+                        fontSize: `${1.75 * fontScale}rem`,
+                        color: priceChanges?.bidPriceIncreased || priceChanges?.bidPriceDecreased 
+                          ? "#FFFFFF" 
+                          : tvColors.goldCardPriceTextColor || "#FDE047"
                       }}
                     >
-                      {currentRates?.ouncePriceUsd?.bid}
+                      {currentRates?.ouncePriceUsd?.bid.toFixed(3)}
                     </span>
                   ) : (
-                    <ShimmerLoader className="w-36 h-10" />
+                    <ShimmerLoader className="w-full h-8" />
                   )}
                 </div>
               </div>
 
               {/* ASK Column */}
-              <div className="flex-1 flex flex-col items-center">
-                {!loading && currentRates?.ouncePriceUsd?.ask ? (
-                  <span
-                    className="font-bold mb-4"
-                    style={{
-                      color: tvColors.goldCardBidAskLabelColor || "#FDE047",
-                      fontSize: `${1.875 * fontScale}rem`
-                    }}
-                  >
-                    ASK
-                  </span>
-                ) : (
-                  <ShimmerLoader className="w-20 h-8 mb-4" />
-                )}
+              <div className="flex-1">
+                <div className="mb-3">
+                  {!loading && currentRates?.ouncePriceUsd?.ask ? (
+                    <span
+                      className="font-bold block"
+                      style={{
+                        color: tvColors.goldCardBidAskLabelColor || "#FDE047",
+                        fontSize: `${1.5 * fontScale}rem`
+                      }}
+                    >
+                      ASK
+                    </span>
+                  ) : (
+                    <ShimmerLoader className="w-16 h-6" />
+                  )}
+                </div>
                 <div
-                  className={`px-4 py-3 rounded-lg min-w-[160px] text-center ${
+                  className={`px-4 py-1 rounded text-center w-full ${
                     priceChanges?.askPriceIncreased
                       ? "bg-green-600"
                       : priceChanges?.askPriceDecreased
@@ -342,20 +344,18 @@ const PriceCard: React.FC<PriceCardProps> = ({
                 >
                   {!loading && currentRates ? (
                     <span
-                      className="font-bold"
+                      className="font-bold font-mono block"
                       style={{
-                        color:
-                          priceChanges?.askPriceIncreased ||
-                          priceChanges?.askPriceDecreased
-                            ? "#FFFFFF"
-                            : tvColors.goldCardPriceTextColor || "#FDE047",
-                        fontSize: `${2.25 * fontScale}rem`
+                        fontSize: `${1.75 * fontScale}rem`,
+                        color: priceChanges?.askPriceIncreased || priceChanges?.askPriceDecreased 
+                          ? "#FFFFFF" 
+                          : tvColors.goldCardPriceTextColor || "#FDE047"
                       }}
                     >
-                      {currentRates?.ouncePriceUsd?.ask}
+                      {currentRates?.ouncePriceUsd?.ask.toFixed(3)}
                     </span>
                   ) : (
-                    <ShimmerLoader className="w-36 h-10" />
+                    <ShimmerLoader className="w-full h-8" />
                   )}
                 </div>
               </div>
@@ -366,12 +366,12 @@ const PriceCard: React.FC<PriceCardProps> = ({
 
       {/* Silver Card */}
       <div
-        className="relative rounded-b-xl -mt-2 overflow-visible"
+        className="relative rounded-xl -mt-2 overflow-visible"
         style={{
           background: `linear-gradient(to right, ${
             tvColors.silverCardGradientColor1 || "#9CA3AF"
           }, ${tvColors.silverCardGradientColor2 || "#E5E7EB"})`,
-          height: "21vh",
+          height: "23vh",
         }}
       >
         {/* Background Image */}
@@ -388,7 +388,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
           <div className="relative flex items-center justify-center h-full overflow-visible px-8">
             {/* Silver OZ Title */}
             <div
-              className="absolute -top-4 px-5 py-2 rounded-lg shadow-lg"
+              className="absolute -top-5 px-12 py-2 rounded-full shadow-lg"
               style={{
                 backgroundColor: tvColors.cardSilverOzBgColor || "#990C11",
               }}
@@ -398,7 +398,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
                   className="font-bold"
                   style={{
                     color: tvColors.cardSilverOzTitleColor || "#FFFFFF",
-                    fontSize: `${1 * fontScale}rem`
+                    fontSize: `${0.875 * fontScale}rem`
                   }}
                 >
                   SILVER OZ
@@ -413,29 +413,31 @@ const PriceCard: React.FC<PriceCardProps> = ({
               <img
                 src="/silver-bar.png"
                 alt="Silver Bars"
-                className="w-28 h-20 object-contain"
+                className="w-26 h-20 object-contain"
               />
             </div>
 
             {/* Price Container */}
-            <div className="flex w-full gap-10 mt-4 ml-28">
+            <div className="flex w-full gap-8 mt-2 ml-28">
               {/* BID Column */}
-              <div className="flex-1 flex flex-col items-center">
-                {!loading && currentRates?.silverOuncePriceUsd?.bid ? (
-                  <span
-                    className="font-bold mb-3"
-                    style={{
-                      color: tvColors.silverCardBidAskLabelColor || "#1F2937",
-                      fontSize: `${1.5 * fontScale}rem`
-                    }}
-                  >
-                    BID
-                  </span>
-                ) : (
-                  <ShimmerLoader className="w-18 h-7 mb-3" />
-                )}
+              <div className="flex-1">
+                <div className="mb-2">
+                  {!loading && currentRates?.silverOuncePriceUsd?.bid ? (
+                    <span
+                      className="font-bold block"
+                      style={{
+                        color: tvColors.silverCardBidAskLabelColor || "#1F2937",
+                        fontSize: `${1.25 * fontScale}rem`
+                      }}
+                    >
+                      BID
+                    </span>
+                  ) : (
+                    <ShimmerLoader className="w-12 h-5" />
+                  )}
+                </div>
                 <div
-                  className={`px-3 py-2 rounded-lg min-w-[140px] text-center ${
+                  className={`px-3 py-1 rounded text-center w-full ${
                     priceChanges?.silverBidPriceIncreased
                       ? "bg-green-600"
                       : priceChanges?.silverBidPriceDecreased
@@ -445,41 +447,41 @@ const PriceCard: React.FC<PriceCardProps> = ({
                 >
                   {!loading && currentRates ? (
                     <span
-                      className="font-bold"
+                      className="font-bold font-mono block"
                       style={{
-                        color:
-                          priceChanges?.silverBidPriceIncreased ||
-                          priceChanges?.silverBidPriceDecreased
-                            ? "#FFFFFF"
-                            : tvColors.silverCardPriceTextColor || "#1F2937",
-                        fontSize: `${1.875 * fontScale}rem`
+                        fontSize: `${1.8 * fontScale}rem`,
+                        color: priceChanges?.silverBidPriceIncreased || priceChanges?.silverBidPriceDecreased 
+                          ? "#FFFFFF" 
+                          : tvColors.silverCardPriceTextColor || "#1F2937"
                       }}
                     >
-                      {currentRates?.silverOuncePriceUsd?.bid}
+                      {currentRates?.silverOuncePriceUsd?.bid.toFixed(3)}
                     </span>
                   ) : (
-                    <ShimmerLoader className="w-28 h-8" />
+                    <ShimmerLoader className="w-full h-6" />
                   )}
                 </div>
               </div>
 
               {/* ASK Column */}
-              <div className="flex-1 flex flex-col items-center">
-                {!loading && currentRates?.silverOuncePriceUsd?.ask ? (
-                  <span
-                    className="font-bold mb-3"
-                    style={{
-                      color: tvColors.silverCardBidAskLabelColor || "#1F2937",
-                      fontSize: `${1.5 * fontScale}rem`
-                    }}
-                  >
-                    ASK
-                  </span>
-                ) : (
-                  <ShimmerLoader className="w-18 h-7 mb-3" />
-                )}
+              <div className="flex-1">
+                <div className="mb-2">
+                  {!loading && currentRates?.silverOuncePriceUsd?.ask ? (
+                    <span
+                      className="font-bold block"
+                      style={{
+                        color: tvColors.silverCardBidAskLabelColor || "#1F2937",
+                        fontSize: `${1.25 * fontScale}rem`
+                      }}
+                    >
+                      ASK
+                    </span>
+                  ) : (
+                    <ShimmerLoader className="w-12 h-5" />
+                  )}
+                </div>
                 <div
-                  className={`px-3 py-2 rounded-lg min-w-[140px] text-center ${
+                  className={`px-3 py-1 rounded text-center w-full ${
                     priceChanges?.silverAskPriceIncreased
                       ? "bg-green-600"
                       : priceChanges?.silverAskPriceDecreased
@@ -489,20 +491,18 @@ const PriceCard: React.FC<PriceCardProps> = ({
                 >
                   {!loading && currentRates ? (
                     <span
-                      className="font-bold"
+                      className="font-bold font-mono block"
                       style={{
-                        color:
-                          priceChanges?.silverAskPriceIncreased ||
-                          priceChanges?.silverAskPriceDecreased
-                            ? "#FFFFFF"
-                            : tvColors.silverCardPriceTextColor || "#1F2937",
-                        fontSize: `${1.875 * fontScale}rem`
+                        fontSize: `${1.8 * fontScale}rem`,
+                        color: priceChanges?.silverAskPriceIncreased || priceChanges?.silverAskPriceDecreased 
+                          ? "#FFFFFF" 
+                          : tvColors.silverCardPriceTextColor || "#1F2937"
                       }}
                     >
-                      {currentRates?.silverOuncePriceUsd?.ask}
+                      {currentRates?.silverOuncePriceUsd?.ask.toFixed(3)}
                     </span>
                   ) : (
-                    <ShimmerLoader className="w-28 h-8" />
+                    <ShimmerLoader className="w-full h-6" />
                   )}
                 </div>
               </div>
@@ -995,21 +995,21 @@ const DataTable: React.FC<{
   ];
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col" style={{ paddingTop: "0rem", paddingBottom: "0.75rem" }}>
       {/* Table Header */}
       <div
-        className="rounded-3xl p-4 mb-3"
+        className="rounded-3xl p-3 mb-3 flex items-center"
         style={{
           backgroundColor: tvColors.metalTableHeaderBgColor || "#F6111C",
-          height: "8vh",
+          height: "9vh",
         }}
       >
-        <div className="grid grid-cols-4 gap-4 text-center">
+        <div className="grid grid-cols-4 gap-4 text-center w-full">
           <div
             className="font-bold"
             style={{ 
               color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
-              fontSize: `${1.125 * fontScale}rem`
+              fontSize: `${1.25 * fontScale}rem`
             }}
           >
             METAL
@@ -1018,7 +1018,7 @@ const DataTable: React.FC<{
             className="font-bold"
             style={{ 
               color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
-              fontSize: `${1.125 * fontScale}rem`
+              fontSize: `${1.25 * fontScale}rem`
             }}
           >
             WEIGHT
@@ -1027,7 +1027,7 @@ const DataTable: React.FC<{
             className="font-bold"
             style={{ 
               color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
-              fontSize: `${1.125 * fontScale}rem`
+              fontSize: `${1.25 * fontScale}rem`
             }}
           >
             BID (AED)
@@ -1036,7 +1036,7 @@ const DataTable: React.FC<{
             className="font-bold"
             style={{ 
               color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
-              fontSize: `${1.125 * fontScale}rem`
+              fontSize: `${1.25 * fontScale}rem`
             }}
           >
             ASK (AED)
@@ -1045,7 +1045,7 @@ const DataTable: React.FC<{
       </div>
 
       {/* Table Rows */}
-      <div className="flex flex-col space-y-3 flex-1">
+      <div className="flex flex-col space-y-1 flex-1">
         {tableData.map((item, index) => {
           const rateData = rates?.[item.key as keyof MetalRates] as
             | { bid: number; ask: number }
@@ -1054,29 +1054,29 @@ const DataTable: React.FC<{
           return (
             <div
               key={index}
-              className="rounded-3xl p-4 flex-1"
+              className="rounded-3xl p-3 flex-1 flex items-center"
               style={{
                 backgroundColor: tvColors.metalTableRowBgColor || "#FFCB84",
                 color: tvColors.metalTableRowTextColor || "#4D4D4D",
-                height: "9vh",
+                height: "10vh",
               }}
             >
-              <div className="grid grid-cols-4 gap-4 text-center items-center">
-                <div className="font-bold" style={{ fontSize: `${1.125 * fontScale}rem` }}>
+              <div className="grid grid-cols-4 gap-4 text-center items-center w-full">
+                <div className="font-bold" style={{ fontSize: `${1.3 * fontScale}rem` }}>
                   {item.label}
                   {item.purity && (
-                    <span className="ml-1" style={{ fontSize: `${1 * fontScale}rem` }}>{item.purity}</span>
+                    <span className="ml-1" style={{ fontSize: `${1.15 * fontScale}rem` }}>{item.purity}</span>
                   )}
                 </div>
-                <div className="font-bold" style={{ fontSize: `${1.125 * fontScale}rem` }}>{item.weight}</div>
-                <div className="font-bold" style={{ fontSize: `${1.125 * fontScale}rem` }}>
+                <div className="font-bold" style={{ fontSize: `${1.3 * fontScale}rem` }}>{item.weight}</div>
+                <div className="font-bold" style={{ fontSize: `${1.3 * fontScale}rem` }}>
                   {!loading && rateData ? (
                     rateData.bid.toLocaleString()
                   ) : (
                     <PriceLoader />
                   )}
                 </div>
-                <div className="font-bold" style={{ fontSize: `${1.125 * fontScale}rem` }}>
+                <div className="font-bold" style={{ fontSize: `${1.3 * fontScale}rem` }}>
                   {!loading && rateData ? (
                     rateData.ask.toLocaleString()
                   ) : (
@@ -1524,7 +1524,7 @@ const AuthenticatedHome: React.FC = () => {
             className="rounded-full px-12 w-full flex items-center justify-center"
             style={{
               backgroundColor: tvColors.bottomBannerBgColor || "#FFCB84",
-              height: "9vh",
+              height: "6vh",
             }}
           >
             <div className="text-center">
@@ -1532,7 +1532,7 @@ const AuthenticatedHome: React.FC = () => {
                 className="font-bold"
                 style={{ 
                   color: tvColors.bottomBannerTextColor || "#4D4D4D",
-                  fontSize: `${1.25 * fontScale}rem`
+                  fontSize: `${1 * fontScale}rem`
                 }}
               >
                 Gold market’s closed today. It’ll be back online when trading resumes Monday morning.
