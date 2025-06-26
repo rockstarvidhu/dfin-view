@@ -1467,7 +1467,7 @@ const AuthenticatedHome: React.FC = () => {
                 <img
                   src={getCompanyLogo()!}
                   alt="Logo"
-                  className="h-[12vw] max-h-[12vw] max-w-[24vw] object-contain mx-auto"
+                  className="h-[11vw] max-h-[11vw] w-[28vw] max-w-[28vw] object-contain mx-auto"
                   style={{ display: 'block' }}
                   onError={({ currentTarget: target }) => { target.style.display = "none"; }}
                 />
