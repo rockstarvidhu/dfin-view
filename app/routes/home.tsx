@@ -1301,6 +1301,20 @@ const AuthenticatedHome: React.FC = () => {
   const uaeTime = useUAETime();
   const currentDate = new Date();
 
+  // --- Market Closed Banner Logic ---
+  const [showMarketClosedBanner, setShowMarketClosedBanner] = useState(false);
+  const lastGoldRateChangeRef = useRef<number | null>(null);
+  const marketClosedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Helper to check if gold oz rate changed
+  const goldRateChanged = (a: MetalRates | null, b: MetalRates | null) => {
+    if (!a || !b) return false;
+    return (
+      a.ouncePriceUsd?.bid !== b.ouncePriceUsd?.bid ||
+      a.ouncePriceUsd?.ask !== b.ouncePriceUsd?.ask
+    );
+  };
+
   // Load TV color scheme on component mount and refresh user data
   useEffect(() => {
     const loadTvColors = () => {
@@ -1339,11 +1353,10 @@ const AuthenticatedHome: React.FC = () => {
   // Use SSE hook for real-time price updates
   const { liveRates } = useSSE(API_URL, getUserId());
 
-  // Track price changes for animations
+  // Track price changes for animations and market closed logic
   useEffect(() => {
     if (liveRates && previousRates) {
       const changes: PriceChanges = {};
-
       // Gold price changes
       if (liveRates.ouncePriceUsd?.bid !== previousRates.ouncePriceUsd?.bid) {
         changes.bidPriceIncreased =
@@ -1351,14 +1364,12 @@ const AuthenticatedHome: React.FC = () => {
         changes.bidPriceDecreased =
           liveRates.ouncePriceUsd?.bid < previousRates.ouncePriceUsd?.bid;
       }
-
       if (liveRates.ouncePriceUsd?.ask !== previousRates.ouncePriceUsd?.ask) {
         changes.askPriceIncreased =
           liveRates.ouncePriceUsd?.ask > previousRates.ouncePriceUsd?.ask;
         changes.askPriceDecreased =
           liveRates.ouncePriceUsd?.ask < previousRates.ouncePriceUsd?.ask;
       }
-
       // Silver price changes
       if (
         liveRates.silverOuncePriceUsd?.bid !==
@@ -1371,7 +1382,6 @@ const AuthenticatedHome: React.FC = () => {
           liveRates.silverOuncePriceUsd?.bid <
           previousRates.silverOuncePriceUsd?.bid;
       }
-
       if (
         liveRates.silverOuncePriceUsd?.ask !==
         previousRates.silverOuncePriceUsd?.ask
@@ -1383,13 +1393,28 @@ const AuthenticatedHome: React.FC = () => {
           liveRates.silverOuncePriceUsd?.ask <
           previousRates.silverOuncePriceUsd?.ask;
       }
-
       setPriceChanges(changes);
-
       // Reset price change indicators after 2 seconds
       setTimeout(() => {
         setPriceChanges({});
       }, 2000);
+    }
+
+    // --- Market Closed Banner Logic ---
+    if (liveRates) {
+      // If gold rate changed, update last change timestamp and hide banner
+      if (!previousRates || goldRateChanged(liveRates, previousRates)) {
+        lastGoldRateChangeRef.current = Date.now();
+        setShowMarketClosedBanner(false);
+        // Clear any existing timeout
+        if (marketClosedTimeoutRef.current) {
+          clearTimeout(marketClosedTimeoutRef.current);
+        }
+        // Set a new timeout for 2 hours (7200000 ms)
+        marketClosedTimeoutRef.current = setTimeout(() => {
+          setShowMarketClosedBanner(true);
+        }, 2 * 60 * 60 * 1000);
+      }
     }
 
     if (liveRates) {
@@ -1397,6 +1422,21 @@ const AuthenticatedHome: React.FC = () => {
       setIsLoading(false);
     }
   }, [liveRates]);
+
+  // On mount, if no rate change for 2 hours, show banner
+  useEffect(() => {
+    if (lastGoldRateChangeRef.current === null && liveRates) {
+      lastGoldRateChangeRef.current = Date.now();
+      marketClosedTimeoutRef.current = setTimeout(() => {
+        setShowMarketClosedBanner(true);
+      }, 2 * 60 * 60 * 1000);
+    }
+    return () => {
+      if (marketClosedTimeoutRef.current) {
+        clearTimeout(marketClosedTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Debug log for background color
   console.log(
@@ -1407,7 +1447,7 @@ const AuthenticatedHome: React.FC = () => {
   return (
     <>
       <div
-        className="flex flex-col h-screen text-white relative overflow-hidden "
+        className="flex flex-col h-screen text-white relative overflow-hidden"
         style={{
           fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif",
           backgroundColor: tvColors.backgroundColor || "#5D0004",
@@ -1475,7 +1515,28 @@ const AuthenticatedHome: React.FC = () => {
             </div>
 
             {/* Date - End */}
-            <div className="flex flex-col items-end">
+            <div className="flex flex-col items-end relative" style={{minWidth: '10vw'}}>
+              {/* Closed Banner Overlay (conditionally shown) */}
+              {showMarketClosedBanner && (
+                <>
+                  <img
+                    src="/closed-banner.png"
+                    alt="Closed Banner"
+                    className="absolute left-1/2 z-30 w-[22vw] max-w-[28vw] drop-shadow-lg"
+                    style={{
+                      pointerEvents: 'none',
+                      top: '-9vw',
+                      transform: 'translate(-50%, 0%) rotate(-7deg)',
+                    }}
+                  />
+                  {/* Banner Text Overlay */}
+                  <div
+                    className="absolute z-40 left-[47%] top-[-1vw] w-[18vw] max-w-[24vw] text-center font-normal text-[#5D0004] pointer-events-none -translate-x-[55%] rotate-[-16deg] text-[1.8vw] leading-[1.22] font-manrope line-height-[2.22]"
+                  >
+                    <span className="font-bold">Market closed!</span>
+                  </div>
+                </>
+              )}
               <div className="text-white font-bold" style={{ fontSize: `${1.125 * fontScale}rem` }}>
                 {currentDate.toLocaleDateString("en-GB", {
                   day: "2-digit",
@@ -1495,7 +1556,7 @@ const AuthenticatedHome: React.FC = () => {
           </div>
         </div>
 
-        <main className="flex w-full overflow-visible" style={{height: "64vh", marginTop: "3vh"}}>
+        <main className="flex flex-1 w-full overflow-visible" style={{marginTop: "2vh"}}>
           <div className="flex-none w-[58%] h-full p-6 overflow-visible">
             <div style={{marginTop: "-0.5rem"}}>
               <DataTable
