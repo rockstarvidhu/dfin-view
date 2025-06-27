@@ -224,7 +224,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
           background: `linear-gradient(to right, ${
             tvColors.goldCardGradientColor1 || "#7F1D1D"
           }, ${tvColors.goldCardGradientColor2 || "#EA580C"})`,
-          height: "23vh",
+          height: "25.3vh",
         }}
       >
         {/* Background Image */}
@@ -371,7 +371,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
           background: `linear-gradient(to right, ${
             tvColors.silverCardGradientColor1 || "#9CA3AF"
           }, ${tvColors.silverCardGradientColor2 || "#E5E7EB"})`,
-          height: "23vh",
+          height: "25.3vh",
         }}
       >
         {/* Background Image */}
@@ -1001,7 +1001,7 @@ const DataTable: React.FC<{
         className="rounded-3xl p-3 mb-3 flex items-center"
         style={{
           backgroundColor: tvColors.metalTableHeaderBgColor || "#F6111C",
-          height: "9vh",
+          height: "9.5vh",
         }}
       >
         <div className="grid grid-cols-4 gap-4 text-center w-full">
@@ -1054,11 +1054,11 @@ const DataTable: React.FC<{
           return (
             <div
               key={index}
-              className="rounded-3xl p-3 flex-1 flex items-center"
+              className="rounded-3xl p-3 flex items-center"
               style={{
                 backgroundColor: tvColors.metalTableRowBgColor || "#FFCB84",
                 color: tvColors.metalTableRowTextColor || "#4D4D4D",
-                height: "10vh",
+                height: "8.3vh",
               }}
             >
               <div className="grid grid-cols-4 gap-4 text-center items-center w-full">
