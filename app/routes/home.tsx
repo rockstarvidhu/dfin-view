@@ -71,6 +71,7 @@ interface MetalRates {
   tripleNinePointFive: { ask: number; bid: number };
   ttbPrice: { ask: number; bid: number };
   silverOuncePriceUsd: { ask: number; bid: number };
+  isMarketClosed?: boolean;
 }
 
 interface PriceChanges {
@@ -515,7 +516,7 @@ const PriceCard: React.FC<PriceCardProps> = ({
 };
 
 // Configuration
-export const API_URL = "https://novis-api-development.dappgenie.io";
+export const API_URL = "http://localhost:3006";
 export const DEFAULT_USER_ID = "654a1b92b528e35018fe028c";
 
 // Check if user is authenticated
@@ -1299,21 +1300,17 @@ const AuthenticatedHome: React.FC = () => {
     DEFAULT_TV_COLOR_SCHEME
   );
   const uaeTime = useUAETime();
-  const currentDate = new Date();
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [isClient, setIsClient] = useState(false);
+
+  // Set client flag and current date on mount
+  useEffect(() => {
+    setIsClient(true);
+    setCurrentDate(new Date());
+  }, []);
 
   // --- Market Closed Banner Logic ---
   const [showMarketClosedBanner, setShowMarketClosedBanner] = useState(false);
-  const lastGoldRateChangeRef = useRef<number | null>(null);
-  const marketClosedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Helper to check if gold oz rate changed
-  const goldRateChanged = (a: MetalRates | null, b: MetalRates | null) => {
-    if (!a || !b) return false;
-    return (
-      a.ouncePriceUsd?.bid !== b.ouncePriceUsd?.bid ||
-      a.ouncePriceUsd?.ask !== b.ouncePriceUsd?.ask
-    );
-  };
 
   // Load TV color scheme on component mount and refresh user data
   useEffect(() => {
@@ -1356,6 +1353,8 @@ const AuthenticatedHome: React.FC = () => {
   // Track price changes for animations and market closed logic
   useEffect(() => {
     if (liveRates && previousRates) {
+
+      console.log("liveRates", liveRates);
       const changes: PriceChanges = {};
       // Gold price changes
       if (liveRates.ouncePriceUsd?.bid !== previousRates.ouncePriceUsd?.bid) {
@@ -1402,19 +1401,8 @@ const AuthenticatedHome: React.FC = () => {
 
     // --- Market Closed Banner Logic ---
     if (liveRates) {
-      // If gold rate changed, update last change timestamp and hide banner
-      if (!previousRates || goldRateChanged(liveRates, previousRates)) {
-        lastGoldRateChangeRef.current = Date.now();
-        setShowMarketClosedBanner(false);
-        // Clear any existing timeout
-        if (marketClosedTimeoutRef.current) {
-          clearTimeout(marketClosedTimeoutRef.current);
-        }
-        // Set a new timeout for 2 hours (7200000 ms)
-        marketClosedTimeoutRef.current = setTimeout(() => {
-          setShowMarketClosedBanner(true);
-        }, 2 * 60 * 60 * 1000);
-      }
+      // Use backend market closed status
+      setShowMarketClosedBanner(liveRates.isMarketClosed || false);
     }
 
     if (liveRates) {
@@ -1422,21 +1410,6 @@ const AuthenticatedHome: React.FC = () => {
       setIsLoading(false);
     }
   }, [liveRates]);
-
-  // On mount, if no rate change for 2 hours, show banner
-  useEffect(() => {
-    if (lastGoldRateChangeRef.current === null && liveRates) {
-      lastGoldRateChangeRef.current = Date.now();
-      marketClosedTimeoutRef.current = setTimeout(() => {
-        setShowMarketClosedBanner(true);
-      }, 2 * 60 * 60 * 1000);
-    }
-    return () => {
-      if (marketClosedTimeoutRef.current) {
-        clearTimeout(marketClosedTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Debug log for background color
   console.log(
@@ -1503,7 +1476,7 @@ const AuthenticatedHome: React.FC = () => {
 
             {/* Company Logo */}
             <div className="flex items-center justify-center" style={{height: "100%"}}>
-              {getCompanyLogo() && (
+              {isClient && getCompanyLogo() && (
                 <img
                   src={getCompanyLogo()!}
                   alt="Logo"
@@ -1615,9 +1588,11 @@ The price shown is indicative. Please contact us for booking
 // Main Home Component with Authentication Check
 const Home: React.FC = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   // Check authentication on component mount
   useEffect(() => {
+    setIsClient(true);
     const checkAuth = () => {
       if (!isAuthenticated()) {
         // Redirect to login if not authenticated
@@ -1632,11 +1607,12 @@ const Home: React.FC = () => {
   }, []);
 
   // Show loading screen while checking authentication
-  if (isCheckingAuth) {
+  if (isCheckingAuth || !isClient) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-red-900 to-red-700">
         <div className="text-center">
-          {getCompanyLogo() && (
+          {/* Only show logo on client side to avoid hydration mismatch */}
+          {isClient && getCompanyLogo() && (
             <img
               src={getCompanyLogo()!}
               alt={getCompanyName()}
