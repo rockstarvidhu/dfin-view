@@ -1504,9 +1504,10 @@ const AuthenticatedHome: React.FC = () => {
                   />
                   {/* Banner Text Overlay */}
                   <div
-                    className="absolute z-40 left-[47%] top-[-1vw] w-[18vw] max-w-[24vw] text-center font-normal text-[#5D0004] pointer-events-none -translate-x-[55%] rotate-[-16deg] text-[1.8vw] leading-[1.22] font-manrope line-height-[2.22]"
+                    className="absolute z-40 left-[47%] top-[-2.2vw] w-[18vw] max-w-[24vw] text-center font-normal text-[#5D0004] pointer-events-none -translate-x-[55%] rotate-[-18deg] text-[2.2vw] leading-[1.22] font-manrope line-height-[2.22]"
                   >
-                    <span className="font-bold">Market closed!</span>
+                    <div className="font-bold">MARKET</div>
+                    <div className="font-bold">CLOSED!</div>
                   </div>
                 </>
               )}
