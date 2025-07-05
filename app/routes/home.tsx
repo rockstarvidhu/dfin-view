@@ -1492,22 +1492,24 @@ const AuthenticatedHome: React.FC = () => {
               {/* Closed Banner Overlay (conditionally shown) */}
               {showMarketClosedBanner && (
                 <>
-                  <img
-                    src="/closed-banner.png"
-                    alt="Closed Banner"
-                    className="absolute left-1/2 z-30 w-[22vw] max-w-[28vw] drop-shadow-lg"
-                    style={{
-                      pointerEvents: 'none',
-                      top: '-9vw',
-                      transform: 'translate(-50%, 0%) rotate(-7deg)',
-                    }}
-                  />
-                  {/* Banner Text Overlay */}
-                  <div
-                    className="absolute z-40 left-[47%] top-[-2.2vw] w-[18vw] max-w-[24vw] text-center font-normal text-[#5D0004] pointer-events-none -translate-x-[55%] rotate-[-18deg] text-[2.2vw] leading-[1.22] font-manrope line-height-[2.22]"
-                  >
-                    <div className="font-bold">MARKET</div>
-                    <div className="font-bold">CLOSED!</div>
+                  <div className="relative w-full flex justify-center items-center">
+                    <img
+                      src="/closed-banner.png"
+                      alt="Closed Banner"
+                      className="absolute left-1/2 z-30 w-[22vw] max-w-[28vw] drop-shadow-lg"
+                      style={{
+                        pointerEvents: 'none',
+                        top: '-9vw',
+                        transform: 'translate(-50%, 0%) rotate(-7deg)',
+                      }}
+                    />
+                    {/* Banner Text Overlay - perfectly centered */}
+                    <div
+                      className="absolute z-40 left-[41%] top-1/2 w-[18vw] max-w-[24vw] text-center font-normal text-[#5D0004] pointer-events-none -translate-x-1/2 -translate-y-1/2 rotate-[-18deg] text-[2.2vw] leading-[1.22] font-manrope"
+                    >
+                      <div className="font-bold">MARKET</div>
+                      <div className="font-bold">CLOSED!</div>
+                    </div>
                   </div>
                 </>
               )}
