@@ -1488,42 +1488,47 @@ const AuthenticatedHome: React.FC = () => {
             </div>
 
             {/* Date - End */}
-            <div className="flex flex-col items-end relative" style={{minWidth: '10vw'}}>
-              {/* Closed Banner Overlay (conditionally shown) */}
-              {showMarketClosedBanner && (
-                <>
-                  <div className="relative w-full flex justify-center items-center">
-                    <img
-                      src="/closed-banner.png"
-                      alt="Closed Banner"
-                      className="absolute left-1/2 z-30 w-[22vw] max-w-[28vw] drop-shadow-lg"
-                      style={{
-                        pointerEvents: 'none',
-                        top: '-9vw',
-                        transform: 'translate(-50%, 0%) rotate(-7deg)',
-                      }}
-                    />
-                    {/* Banner Text Overlay - perfectly centered */}
-                    <div
-                      className="absolute z-40 left-[41%] top-1/2 w-[18vw] max-w-[24vw] text-center font-normal text-[#5D0004] pointer-events-none -translate-x-1/2 -translate-y-1/2 rotate-[-18deg] text-[2.2vw] leading-[1.22] font-manrope"
-                    >
-                      <div className="font-bold">MARKET</div>
-                      <div className="font-bold">CLOSED!</div>
-                    </div>
-                  </div>
-                </>
-              )}
-              <div className="text-white font-bold" style={{ fontSize: `${1.125 * fontScale}rem` }}>
-                {currentDate.toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </div>
-              <div className="text-white" style={{ fontSize: `${1 * fontScale}rem` }}>
-                {currentDate.toLocaleDateString("en-US", { weekday: "long" })}
-              </div>
-            </div>
+<div className="flex flex-col items-end relative" style={{ minWidth: '10vw' }}>
+  {/* Closed Banner Overlay (conditionally shown) */}
+  {showMarketClosedBanner && (
+    <>
+      <div className="relative w-full flex justify-center items-center">
+        <img
+          src="/closed-banner.png"
+          alt="Closed Banner"
+          className="absolute left-1/2 z-30 w-[22vw] max-w-[28vw] drop-shadow-lg"
+          style={{
+            pointerEvents: 'none',
+            top: '-9vw',
+            transform: 'translate(-50%, 0%) rotate(-7deg)',
+          }}
+        />
+        {/* Banner Text Overlay - perfectly centered */}
+        <div
+          className="absolute z-40 left-[41%] top-1/2 w-[18vw] max-w-[24vw] text-center font-normal text-[#5D0004] pointer-events-none -translate-x-1/2 -translate-y-1/2 rotate-[-18deg] text-[2.2vw] leading-[1.22] font-manrope"
+        >
+          <div className="font-bold">MARKET</div>
+          <div className="font-bold">CLOSED!</div>
+        </div>
+      </div>
+    </>
+  )}
+<div className="text-white font-bold" >
+  {/* Date */}
+  {currentDate.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })}
+
+  {/* Weekday */}
+  <div className="text-white font-bold text-2xl" >
+    {currentDate.toLocaleDateString("en-US", { weekday: "long" })}
+  </div>
+</div>
+
+
+</div>
           </div>
 
           {/* Right - Other Country Flags */}
