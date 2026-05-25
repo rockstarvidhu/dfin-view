@@ -1,40 +1,55 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/home";
 
-// TV Font Scaling Hook
-const useTVFontScale = () => {
-  const [scale, setScale] = useState(1);
+const API_URL = "https://novis-api-development.dappgenie.io";
+const DEFAULT_USER_ID = "654a1b92b528e35018fe028c";
 
-  useEffect(() => {
-    const calculateScale = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      
-      // Base scale for standard browser size (1280x720 for smaller reference)
-      const baseWidth = 1280;
-      const baseHeight = 720;
-      
-      // Calculate scale based on screen size
-      const widthScale = width / baseWidth;
-      const heightScale = height / baseHeight;
-      
-      // Use the smaller scale to ensure content fits, but make it more aggressive
-      const newScale = Math.min(widthScale, heightScale);
-      
-      // Apply very minimal scaling 
-      setScale(Math.max(1.02, Math.min(newScale * 1.05, 2)));
-    };
+const TV_FONT =
+  "'Barlow Condensed', 'Oswald', 'Arial Narrow', ui-sans-serif, system-ui, sans-serif";
 
-    calculateScale();
-    window.addEventListener('resize', calculateScale);
-    
-    return () => window.removeEventListener('resize', calculateScale);
-  }, []);
+const FontLoader: React.FC = () => (
+  <style>
+    {`
+      @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&display=swap');
 
-  return scale;
+      .tv-condensed {
+        font-family: ${TV_FONT};
+        letter-spacing: 0.04em;
+      }
+
+      .tv-price {
+        font-family: ${TV_FONT};
+        font-weight: 800;
+        letter-spacing: 0.015em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .tv-table-price {
+        font-family: ${TV_FONT};
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        font-variant-numeric: tabular-nums;
+      }
+    `}
+  </style>
+);
+
+const DASHBOARD = {
+  bg: "#f6f2e8",
+  panel: "#fffaf0",
+  panelRow: "#ffffff",
+  panelRowAlt: "#f1eadc",
+  border: "#d4c5a8",
+  gold: "#b98018",
+  goldBright: "#d69420",
+  silver: "#5b7f9d",
+  silverBright: "#6f98bb",
+  text: "#1c1a16",
+  textMuted: "#6e665a",
+  green: "#0f9f45",
+  red: "#dc2638",
 };
 
-// Types
 interface TvColorScheme {
   backgroundColor?: string;
   countryBgColor?: string;
@@ -49,16 +64,12 @@ interface TvColorScheme {
   cardGoldOzBgColor?: string;
   cardSilverOzBgColor?: string;
   cardSilverOzTitleColor?: string;
-  // Gold Card Gradient Colors
   goldCardGradientColor1?: string;
   goldCardGradientColor2?: string;
-  // Silver Card Gradient Colors
   silverCardGradientColor1?: string;
   silverCardGradientColor2?: string;
-  // Gold Card Text Colors
   goldCardBidAskLabelColor?: string;
   goldCardPriceTextColor?: string;
-  // Silver Card Text Colors
   silverCardBidAskLabelColor?: string;
   silverCardPriceTextColor?: string;
 }
@@ -74,15 +85,10 @@ interface MetalRates {
   isMarketClosed?: boolean;
 }
 
-interface PriceChanges {
-  bidPriceIncreased?: boolean;
-  bidPriceDecreased?: boolean;
-  askPriceIncreased?: boolean;
-  askPriceDecreased?: boolean;
-  silverBidPriceIncreased?: boolean;
-  silverBidPriceDecreased?: boolean;
-  silverAskPriceIncreased?: boolean;
-  silverAskPriceDecreased?: boolean;
+interface PriceDelta {
+  value: number;
+  percent: number;
+  direction: "up" | "down";
 }
 
 interface LoginResponse {
@@ -96,479 +102,96 @@ interface LoginResponse {
 interface PriceCardProps {
   rates?: MetalRates | null;
   loading?: boolean;
-  tvColors?: TvColorScheme;
 }
 
-// Shimmer Loader Component
-const ShimmerLoader: React.FC<{ className?: string }> = ({
-  className = "",
-}) => {
-  return (
-    <div
-      className={`bg-gradient-to-r from-yellow-600 to-yellow-400 animate-pulse rounded ${className}`}
-    ></div>
-  );
-};
+const WORLD_CLOCKS = [
+  { country: "UAE", timezone: "Asia/Dubai", flagSrc: "/uae-flag.png", offset: "GST +4" },
+  { country: "INDIA", timezone: "Asia/Kolkata", flagSrc: "/india-flag.png", offset: "IST +5:30" },
+  { country: "UK", timezone: "Europe/London", flagSrc: "/uk-flag.png", offset: "BST +1" },
+  { country: "USA", timezone: "America/New_York", flagSrc: "/us-flag.png", offset: "EDT -4" },
+] as const;
 
-const PriceCard: React.FC<PriceCardProps> = ({
-  rates = null,
-  loading = false,
-  tvColors = {},
-}) => {
-  const fontScale = useTVFontScale();
-  const [displayedRates, setDisplayedRates] = useState<MetalRates | null>(null);
-  const liveRatesRef = useRef<MetalRates | null>(null);
-  const [priceChanges, setPriceChanges] = useState<PriceChanges>({
-    bidPriceIncreased: false,
-    bidPriceDecreased: false,
-    askPriceIncreased: false,
-    askPriceDecreased: false,
-    silverBidPriceIncreased: false,
-    silverBidPriceDecreased: false,
-    silverAskPriceIncreased: false,
-    silverAskPriceDecreased: false,
-  });
+const useTVFontScale = () => {
+  const [scale, setScale] = useState(1);
 
-  const resetTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Dummy data for demonstration
-  const dummyRates: MetalRates = {
-    gramPrice: { ask: 75.5, bid: 75.25 },
-    gramNineOneSix: { ask: 69.2, bid: 68.95 },
-    nineNineFive: { ask: 74.8, bid: 74.55 },
-    ouncePriceUsd: { ask: 2347.5, bid: 2345.25 },
-    tripleNinePointFive: { ask: 75.1, bid: 74.85 },
-    ttbPrice: { ask: 73.9, bid: 73.65 },
-    silverOuncePriceUsd: { ask: 31.25, bid: 31.15 },
-  };
-
-  // Use dummy data if no rates provided
-  const currentRates = rates || dummyRates;
-
-  // Update the ref with the latest rates
   useEffect(() => {
-    if (currentRates) {
-      liveRatesRef.current = currentRates;
-    }
-  }, [currentRates]);
-
-  // Throttle UI updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (liveRatesRef.current) {
-        const newRates = liveRatesRef.current;
-
-        // Compare new rates with displayed rates to detect changes
-        if (displayedRates) {
-          setPriceChanges({
-            bidPriceIncreased:
-              newRates.ouncePriceUsd?.bid > displayedRates.ouncePriceUsd?.bid,
-            bidPriceDecreased:
-              newRates.ouncePriceUsd?.bid < displayedRates.ouncePriceUsd?.bid,
-            askPriceIncreased:
-              newRates.ouncePriceUsd?.ask > displayedRates.ouncePriceUsd?.ask,
-            askPriceDecreased:
-              newRates.ouncePriceUsd?.ask < displayedRates.ouncePriceUsd?.ask,
-            silverBidPriceIncreased:
-              newRates.silverOuncePriceUsd?.bid >
-              displayedRates.silverOuncePriceUsd?.bid,
-            silverBidPriceDecreased:
-              newRates.silverOuncePriceUsd?.bid <
-              displayedRates.silverOuncePriceUsd?.bid,
-            silverAskPriceIncreased:
-              newRates.silverOuncePriceUsd?.ask >
-              displayedRates.silverOuncePriceUsd?.ask,
-            silverAskPriceDecreased:
-              newRates.silverOuncePriceUsd?.ask <
-              displayedRates.silverOuncePriceUsd?.ask,
-          });
-
-          // Clear any existing timeout before setting a new one
-          if (resetTimeoutRef.current) {
-            clearTimeout(resetTimeoutRef.current);
-          }
-
-          // Reset price change indicators after 6 seconds
-          resetTimeoutRef.current = setTimeout(() => {
-            setPriceChanges({
-              bidPriceIncreased: false,
-              bidPriceDecreased: false,
-              askPriceIncreased: false,
-              askPriceDecreased: false,
-              silverBidPriceIncreased: false,
-              silverBidPriceDecreased: false,
-              silverAskPriceIncreased: false,
-              silverAskPriceDecreased: false,
-            });
-          }, 6000);
-        }
-
-        // Update the displayed rates
-        setDisplayedRates(newRates);
-      }
-    }, 100);
-
-    return () => {
-      clearInterval(interval);
-      if (resetTimeoutRef.current) {
-        clearTimeout(resetTimeoutRef.current);
-      }
+    const calculateScale = () => {
+      const widthScale = window.innerWidth / 1280;
+      const heightScale = window.innerHeight / 720;
+      const newScale = Math.min(widthScale, heightScale);
+      setScale(Math.max(1.02, Math.min(newScale * 1.05, 2)));
     };
-  }, [displayedRates]);
 
-  return (
-    <div className="space-y-0">
-      {/* Gold Card */}
-      <div
-        className="relative rounded-t-xl overflow-visible"
-        style={{
-          background: `linear-gradient(to right, ${
-            tvColors.goldCardGradientColor1 || "#7F1D1D"
-          }, ${tvColors.goldCardGradientColor2 || "#EA580C"})`,
-          height: "25.3vh",
-        }}
-      >
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 w-full h-full rounded-xl"
-          style={{
-            backgroundImage: `url('/spiral.png')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-          }}
-        >
-          {/* Overlay */}
-          <div className="relative flex items-center justify-center h-full overflow-visible px-8">
-            {/* Gold OZ Title */}
-            <div
-              className="absolute -top-5 px-12 py-2 rounded-full shadow-lg"
-              style={{
-                backgroundColor: tvColors.cardGoldOzBgColor || "#FFA62E",
-              }}
-            >
-              {!loading && currentRates?.ouncePriceUsd?.bid ? (
-                <span
-                  className="font-bold"
-                  style={{ 
-                    color: tvColors.cardGoldOzTitleColor || "#C62127",
-                    fontSize: `${0.875 * fontScale}rem`
-                  }}
-                >
-                  GOLD OZ
-                </span>
-              ) : (
-                <ShimmerLoader className="w-24 h-8" />
-              )}
-            </div>
+    calculateScale();
+    window.addEventListener("resize", calculateScale);
+    return () => window.removeEventListener("resize", calculateScale);
+  }, []);
 
-            {/* Gold Bar Image */}
-            <div className="absolute left-6 top-1/2 transform -translate-y-1/2">
-              <img
-                src="/gold-bar.png"
-                alt="Gold Bars"
-                className="w-26 h-20 object-contain"
-              />
-            </div>
-
-            {/* Price Container */}
-            <div className="flex w-full gap-8 mt-2 ml-28">
-              {/* BID Column */}
-              <div className="flex-1 flex flex-col items-center">
-                <div className="mb-3 text-center w-full">
-                  {!loading && currentRates?.ouncePriceUsd?.bid ? (
-                    <span
-                      className="font-bold block text-center w-full"
-                      style={{
-                        color: tvColors.goldCardBidAskLabelColor || "#FDE047",
-                        fontSize: `${1.5 * fontScale}rem`
-                      }}
-                    >
-                      BID
-                    </span>
-                  ) : (
-                    <ShimmerLoader className="w-16 h-6 mx-auto" />
-                  )}
-                </div>
-                <div
-                  className={`px-4 py-1 rounded text-center w-full ${
-                    priceChanges?.bidPriceIncreased
-                      ? "bg-green-600"
-                      : priceChanges?.bidPriceDecreased
-                      ? "bg-red-600"
-                      : ""
-                  }`}
-                >
-                  {!loading && currentRates ? (
-                    <span
-                      className="font-bold font-mono block"
-                      style={{
-                        fontSize: `${1.75 * fontScale}rem`,
-                        color: priceChanges?.bidPriceIncreased || priceChanges?.bidPriceDecreased 
-                          ? "#FFFFFF" 
-                          : tvColors.goldCardPriceTextColor || "#FDE047"
-                      }}
-                    >
-                      {currentRates?.ouncePriceUsd?.bid.toFixed(2)}
-                    </span>
-                  ) : (
-                    <ShimmerLoader className="w-full h-8" />
-                  )}
-                </div>
-              </div>
-
-              {/* ASK Column */}
-              <div className="flex-1 flex flex-col items-center">
-                <div className="mb-3 text-center w-full">
-                  {!loading && currentRates?.ouncePriceUsd?.ask ? (
-                    <span
-                      className="font-bold block text-center w-full"
-                      style={{
-                        color: tvColors.goldCardBidAskLabelColor || "#FDE047",
-                        fontSize: `${1.5 * fontScale}rem`
-                      }}
-                    >
-                      ASK
-                    </span>
-                  ) : (
-                    <ShimmerLoader className="w-16 h-6 mx-auto" />
-                  )}
-                </div>
-                <div
-                  className={`px-4 py-1 rounded text-center w-full ${
-                    priceChanges?.askPriceIncreased
-                      ? "bg-green-600"
-                      : priceChanges?.askPriceDecreased
-                      ? "bg-red-600"
-                      : ""
-                  }`}
-                >
-                  {!loading && currentRates ? (
-                    <span
-                      className="font-bold font-mono block"
-                      style={{
-                        fontSize: `${1.75 * fontScale}rem`,
-                        color: priceChanges?.askPriceIncreased || priceChanges?.askPriceDecreased 
-                          ? "#FFFFFF" 
-                          : tvColors.goldCardPriceTextColor || "#FDE047"
-                      }}
-                    >
-                      {currentRates?.ouncePriceUsd?.ask.toFixed(2)}
-                    </span>
-                  ) : (
-                    <ShimmerLoader className="w-full h-8" />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Silver Card */}
-      <div
-        className="relative rounded-xl -mt-2 overflow-visible"
-        style={{
-          background: `linear-gradient(to right, ${
-            tvColors.silverCardGradientColor1 || "#9CA3AF"
-          }, ${tvColors.silverCardGradientColor2 || "#E5E7EB"})`,
-          height: "25.3vh",
-        }}
-      >
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 w-full h-full rounded-xl"
-          style={{
-            backgroundImage: `url('/spiral.png')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-          }}
-        >
-          {/* Overlay */}
-          <div className="relative flex items-center justify-center h-full overflow-visible px-8">
-            {/* Silver OZ Title */}
-            <div
-              className="absolute -top-5 px-12 py-2 rounded-full shadow-lg"
-              style={{
-                backgroundColor: tvColors.cardSilverOzBgColor || "#990C11",
-              }}
-            >
-              {!loading && currentRates?.silverOuncePriceUsd?.bid ? (
-                <span
-                  className="font-bold"
-                  style={{
-                    color: tvColors.cardSilverOzTitleColor || "#FFFFFF",
-                    fontSize: `${0.875 * fontScale}rem`
-                  }}
-                >
-                  SILVER OZ
-                </span>
-              ) : (
-                <ShimmerLoader className="w-20 h-6" />
-              )}
-            </div>
-
-            {/* Silver Bar Image */}
-            <div className="absolute left-6 top-1/2 transform -translate-y-1/2">
-              <img
-                src="/silver-bar.png"
-                alt="Silver Bars"
-                className="w-26 h-20 object-contain"
-              />
-            </div>
-
-            {/* Price Container */}
-            <div className="flex w-full gap-8 mt-2 ml-28">
-              {/* BID Column */}
-              <div className="flex-1 flex flex-col items-center">
-                <div className="mb-2 text-center w-full">
-                  {!loading && currentRates?.silverOuncePriceUsd?.bid ? (
-                    <span
-                      className="font-bold block text-center w-full"
-                      style={{
-                        color: tvColors.silverCardBidAskLabelColor || "#1F2937",
-                        fontSize: `${1.25 * fontScale}rem`
-                      }}
-                    >
-                      BID
-                    </span>
-                  ) : (
-                    <ShimmerLoader className="w-12 h-5 mx-auto" />
-                  )}
-                </div>
-                <div
-                  className={`px-3 py-1 rounded text-center w-full ${
-                    priceChanges?.silverBidPriceIncreased
-                      ? "bg-green-600"
-                      : priceChanges?.silverBidPriceDecreased
-                      ? "bg-red-600"
-                      : ""
-                  }`}
-                >
-                  {!loading && currentRates ? (
-                    <span
-                      className="font-bold font-mono block"
-                      style={{
-                        fontSize: `${1.8 * fontScale}rem`,
-                        color: priceChanges?.silverBidPriceIncreased || priceChanges?.silverBidPriceDecreased 
-                          ? "#FFFFFF" 
-                          : tvColors.silverCardPriceTextColor || "#1F2937"
-                      }}
-                    >
-                      {currentRates?.silverOuncePriceUsd?.bid.toFixed(3)}
-                    </span>
-                  ) : (
-                    <ShimmerLoader className="w-full h-6" />
-                  )}
-                </div>
-              </div>
-
-              {/* ASK Column */}
-              <div className="flex-1 flex flex-col items-center">
-                <div className="mb-2 text-center w-full">
-                  {!loading && currentRates?.silverOuncePriceUsd?.ask ? (
-                    <span
-                      className="font-bold block text-center w-full"
-                      style={{
-                        color: tvColors.silverCardBidAskLabelColor || "#1F2937",
-                        fontSize: `${1.25 * fontScale}rem`
-                      }}
-                    >
-                      ASK
-                    </span>
-                  ) : (
-                    <ShimmerLoader className="w-12 h-5 mx-auto" />
-                  )}
-                </div>
-                <div
-                  className={`px-3 py-1 rounded text-center w-full ${
-                    priceChanges?.silverAskPriceIncreased
-                      ? "bg-green-600"
-                      : priceChanges?.silverAskPriceDecreased
-                      ? "bg-red-600"
-                      : ""
-                  }`}
-                >
-                  {!loading && currentRates ? (
-                    <span
-                      className="font-bold font-mono block"
-                      style={{
-                        fontSize: `${1.8 * fontScale}rem`,
-                        color: priceChanges?.silverAskPriceIncreased || priceChanges?.silverAskPriceDecreased 
-                          ? "#FFFFFF" 
-                          : tvColors.silverCardPriceTextColor || "#1F2937"
-                      }}
-                    >
-                      {currentRates?.silverOuncePriceUsd?.ask.toFixed(3)}
-                    </span>
-                  ) : (
-                    <ShimmerLoader className="w-full h-6" />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return scale;
 };
 
-// Configuration
-export const API_URL = "https://novis-api-development.dappgenie.io";
-export const DEFAULT_USER_ID = "654a1b92b528e35018fe028c";
+const usePriceDelta = (current: number | undefined): PriceDelta | null => {
+  const prevRef = useRef<number | undefined>(undefined);
+  const [delta, setDelta] = useState<PriceDelta | null>(null);
 
-// Check if user is authenticated
-const isAuthenticated = (): boolean => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("user-id") !== null;
-  }
-  return false;
-};
+  useEffect(() => {
+    if (current === undefined || Number.isNaN(current)) return;
 
-// Get user ID from storage or use default
-const getUserId = (): string => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("user-id") || DEFAULT_USER_ID;
-  }
-  return DEFAULT_USER_ID;
-};
+    const prev = prevRef.current;
 
-// Get user data from storage
-const getUserData = (): LoginResponse | null => {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("user-data");
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        return null;
-      }
+    if (prev !== undefined && prev !== current) {
+      const diff = current - prev;
+      setDelta({
+        value: diff,
+        percent: prev !== 0 ? (diff / prev) * 100 : 0,
+        direction: diff >= 0 ? "up" : "down",
+      });
     }
-  }
-  return null;
+
+    prevRef.current = current;
+  }, [current]);
+
+  return delta;
 };
 
-// Get company code from storage
+const isAuthenticated = (): boolean => {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("user-id") !== null;
+};
+
+const getUserId = (): string => {
+  if (typeof window === "undefined") return DEFAULT_USER_ID;
+  return localStorage.getItem("user-id") || DEFAULT_USER_ID;
+};
+
+const getUserData = (): LoginResponse | null => {
+  if (typeof window === "undefined") return null;
+
+  const stored = localStorage.getItem("user-data");
+  if (!stored) return null;
+
+  try {
+    return JSON.parse(stored);
+  } catch (error) {
+    console.error("Error parsing user data:", error);
+    return null;
+  }
+};
+
 const getCompanyCode = (): string | null => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("company-code");
-  }
-  return null;
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("company-code");
 };
 
-// Refresh user data by calling mobile login API
 const refreshUserData = async (): Promise<boolean> => {
   const companyCode = getCompanyCode();
+
   if (!companyCode) {
     console.log("No company code found, cannot refresh data");
     return false;
   }
 
   try {
-    console.log("Refreshing user data for company code:", companyCode);
     const deviceId =
       localStorage.getItem("device-id") ||
       `web-${navigator.userAgent.replace(/\s+/g, "-")}-${Date.now()}`;
@@ -590,15 +213,13 @@ const refreshUserData = async (): Promise<boolean> => {
     }
 
     const data = await response.json();
-    console.log("Refreshed user data:", data);
 
-    // Update stored user data
     localStorage.setItem("user-data", JSON.stringify(data));
     localStorage.setItem("user-id", data.id);
 
-    // Store TV color scheme
-    const tvColorScheme = data.tvColorScheme || DEFAULT_TV_COLOR_SCHEME;
-    localStorage.setItem("tv-color-scheme", JSON.stringify(tvColorScheme));
+    if (data.tvColorScheme) {
+      localStorage.setItem("tv-color-scheme", JSON.stringify(data.tvColorScheme));
+    }
 
     return true;
   } catch (error) {
@@ -607,139 +228,27 @@ const refreshUserData = async (): Promise<boolean> => {
   }
 };
 
-// Logout function
 const handleLogout = () => {
-  console.log("Logging out...");
-
-  // Clear all stored data
   localStorage.removeItem("user-id");
   localStorage.removeItem("user-data");
   localStorage.removeItem("tv-color-scheme");
   localStorage.removeItem("company-code");
   localStorage.removeItem("device-id");
-
-  // Redirect to login page
   window.location.href = "/login";
 };
 
-// Get company logo from user data or return null if none exists
 const getCompanyLogo = (): string | null => {
   const userData = getUserData();
-  if (userData?.logo) {
-    console.log(
-      "Using company logo:",
-      userData.logo,
-      "for company:",
-      userData.name
-    );
-    return userData.logo;
-  }
-  console.log("No company logo found - not displaying any logo");
-  return null;
+  return userData?.logo || null;
 };
 
-// Get company name from user data or use default
 const getCompanyName = (): string => {
   const userData = getUserData();
   return userData?.name || "Dfin Technologies";
 };
 
-// Default TV Color Scheme
-const DEFAULT_TV_COLOR_SCHEME: TvColorScheme = {
-  backgroundColor: "#5D0004",
-  countryBgColor: "#FFCB84",
-  countryTextColor: "#4D4D4D",
-  metalTableHeaderBgColor: "#F6111C",
-  metalTableHeaderTextColor: "#FFFFFF",
-  metalTableRowBgColor: "#FFCB84",
-  metalTableRowTextColor: "#4D4D4D",
-  bottomBannerBgColor: "#FFCB84",
-  bottomBannerTextColor: "#4D4D4D",
-  cardGoldOzTitleColor: "#C62127",
-  cardGoldOzBgColor: "#FFA62E",
-  cardSilverOzBgColor: "#990C11",
-  cardSilverOzTitleColor: "#FFFFFF",
-  // Gold Card Gradient Colors (from-red-900 to-orange-600)
-  goldCardGradientColor1: "#7F1D1D", // red-900
-  goldCardGradientColor2: "#EA580C", // orange-600
-  // Silver Card Gradient Colors (from-gray-400 to-gray-200)
-  silverCardGradientColor1: "#9CA3AF", // gray-400
-  silverCardGradientColor2: "#E5E7EB", // gray-200
-  // Gold Card Text Colors
-  goldCardBidAskLabelColor: "#FDE047", // yellow-300
-  goldCardPriceTextColor: "#FDE047", // yellow-300
-  // Silver Card Text Colors
-  silverCardBidAskLabelColor: "#1F2937", // gray-800
-  silverCardPriceTextColor: "#1F2937", // gray-800
-};
-
-// Get TV color scheme from user data or use default
-const getTvColorScheme = (): TvColorScheme => {
-  const userData = getUserData();
-  console.log("=== TV COLOR DEBUG ===");
-  console.log("Full user data:", userData);
-  console.log(
-    "User data keys:",
-    userData ? Object.keys(userData) : "No user data"
-  );
-
-  if (userData?.tvColorScheme) {
-    console.log("✅ Found tvColorScheme in user data:", userData.tvColorScheme);
-    console.log(
-      "Background color from API:",
-      userData.tvColorScheme.backgroundColor
-    );
-
-    // The API returns tvColorScheme field, not extendedColors
-    const userColors: TvColorScheme = {
-      backgroundColor: userData.tvColorScheme.backgroundColor,
-      countryBgColor: userData.tvColorScheme.countryBgColor,
-      countryTextColor: userData.tvColorScheme.countryTextColor,
-      metalTableHeaderBgColor: userData.tvColorScheme.metalTableHeaderBgColor,
-      metalTableHeaderTextColor:
-        userData.tvColorScheme.metalTableHeaderTextColor,
-      metalTableRowBgColor: userData.tvColorScheme.metalTableRowBgColor,
-      metalTableRowTextColor: userData.tvColorScheme.metalTableRowTextColor,
-      bottomBannerBgColor: userData.tvColorScheme.bottomBannerBgColor,
-      bottomBannerTextColor: userData.tvColorScheme.bottomBannerTextColor,
-      cardGoldOzTitleColor: userData.tvColorScheme.cardGoldOzTitleColor,
-      cardGoldOzBgColor: userData.tvColorScheme.cardGoldOzBgColor,
-      cardSilverOzBgColor: userData.tvColorScheme.cardSilverOzBgColor,
-      cardSilverOzTitleColor: userData.tvColorScheme.cardSilverOzTitleColor,
-      // New gradient and text colors
-      goldCardGradientColor1: userData.tvColorScheme.goldCardGradientColor1,
-      goldCardGradientColor2: userData.tvColorScheme.goldCardGradientColor2,
-      silverCardGradientColor1: userData.tvColorScheme.silverCardGradientColor1,
-      silverCardGradientColor2: userData.tvColorScheme.silverCardGradientColor2,
-      goldCardBidAskLabelColor: userData.tvColorScheme.goldCardBidAskLabelColor,
-      goldCardPriceTextColor: userData.tvColorScheme.goldCardPriceTextColor,
-      silverCardBidAskLabelColor:
-        userData.tvColorScheme.silverCardBidAskLabelColor,
-      silverCardPriceTextColor: userData.tvColorScheme.silverCardPriceTextColor,
-    };
-
-    const finalColors = { ...DEFAULT_TV_COLOR_SCHEME, ...userColors };
-    console.log("Final merged colors:", finalColors);
-    console.log("Final background color:", finalColors.backgroundColor);
-    return finalColors;
-  }
-  console.log("❌ No tvColorScheme found in user data - using defaults");
-  return DEFAULT_TV_COLOR_SCHEME;
-};
-
-// Logout function
-const logout = (): void => {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("user-id");
-    localStorage.removeItem("user-data");
-    window.location.href = "/login";
-  }
-};
-
-// Utility functions
 const getTimeForTimezone = (timezone: string) => {
-  const now = new Date();
-  return now.toLocaleTimeString("en-US", {
+  return new Date().toLocaleTimeString("en-US", {
     timeZone: timezone,
     hour: "2-digit",
     minute: "2-digit",
@@ -747,17 +256,6 @@ const getTimeForTimezone = (timezone: string) => {
   });
 };
 
-const getFormattedDate = () => {
-  const now = new Date();
-  const day = now.getDate();
-  const month = now.toLocaleDateString("en-US", { month: "short" });
-  const year = now.getFullYear();
-  const weekday = now.toLocaleDateString("en-US", { weekday: "long" });
-
-  return `${day} ${month} ${year}\n${weekday}`;
-};
-
-// SSE Hook
 const useSSE = (apiUrl: string, userId: string) => {
   const [liveRates, setLiveRates] = useState<MetalRates | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -768,40 +266,36 @@ const useSSE = (apiUrl: string, userId: string) => {
 
     const sseUrl = `${apiUrl}/rates/live-rate?userId=${userId}`;
 
-    const initializeSSE = () => {
-      try {
-        esRef.current = new EventSource(sseUrl);
+    try {
+      esRef.current = new EventSource(sseUrl);
 
-        esRef.current.addEventListener("open", () => {
-          console.log("SSE connection opened");
-          setIsConnected(true);
-        });
+      esRef.current.addEventListener("open", () => {
+        setIsConnected(true);
+      });
 
-        esRef.current.addEventListener("message", (event) => {
-          try {
-            const currentRate = JSON.parse(event.data);
-            setLiveRates(currentRate);
-          } catch (error) {
-            console.error("Error parsing SSE message:", error);
-          }
-        });
+      esRef.current.addEventListener("message", (event) => {
+        try {
+          const currentRate = JSON.parse(event.data);
+          setLiveRates(currentRate);
+        } catch (error) {
+          console.error("Error parsing SSE message:", error);
+        }
+      });
 
-        esRef.current.addEventListener("error", (error) => {
-          console.error("SSE Error:", error);
-          setIsConnected(false);
-        });
-      } catch (error) {
-        console.error("Failed to initialize SSE:", error);
-      }
-    };
-
-    initializeSSE();
+      esRef.current.addEventListener("error", (error) => {
+        console.error("SSE Error:", error);
+        setIsConnected(false);
+      });
+    } catch (error) {
+      console.error("Failed to initialize SSE:", error);
+    }
 
     return () => {
       if (esRef.current) {
         esRef.current.close();
         esRef.current = null;
       }
+
       setIsConnected(false);
     };
   }, [apiUrl, userId]);
@@ -809,459 +303,6 @@ const useSSE = (apiUrl: string, userId: string) => {
   return { liveRates, isConnected };
 };
 
-// Loading Component
-const PriceLoader: React.FC = () => {
-  return <div className="w-20 h-6 bg-gray-400 rounded animate-pulse"></div>;
-};
-
-// Timezone Clock Component
-const TimezoneClock: React.FC<{
-  country: string;
-  timezone: string;
-  flag: string;
-}> = ({ country, timezone, flag }) => {
-  const [time, setTime] = useState(getTimeForTimezone(timezone));
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(getTimeForTimezone(timezone));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timezone]);
-
-  return (
-    <div className="flex flex-col items-center">
-      <div className="w-12 h-12 rounded-full overflow-hidden mb-2 border-2 border-yellow-400">
-        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-lg">
-          {flag}
-        </div>
-      </div>
-      <div className="bg-yellow-400 text-black px-3 py-1 rounded-lg text-xs font-bold">
-        {country}
-      </div>
-      <div className="text-yellow-300 text-xs font-bold mt-1">{time}</div>
-    </div>
-  );
-};
-
-// Country Time Header Component
-const CountryTimeHeader: React.FC<{ tvColors?: TvColorScheme }> = ({
-  tvColors = {},
-}) => {
-  const fontScale = useTVFontScale();
-  const [indiaTime, setIndiaTime] = useState(
-    getTimeForTimezone("Asia/Kolkata")
-  );
-  const [ukTime, setUkTime] = useState(getTimeForTimezone("Europe/London"));
-  const [usTime, setUsTime] = useState(getTimeForTimezone("America/New_York"));
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIndiaTime(getTimeForTimezone("Asia/Kolkata"));
-      setUkTime(getTimeForTimezone("Europe/London"));
-      setUsTime(getTimeForTimezone("America/New_York"));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="flex justify-around w-full items-end">
-      {/* India */}
-      <div className="flex flex-col items-center">
-        <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
-          <img
-            src="/india-flag.png"
-            alt="India Flag"
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div
-          className="px-3 py-2 rounded-lg font-bold text-center min-w-[90px]"
-          style={{
-            backgroundColor: tvColors.countryBgColor || "#FFCB84",
-            color: tvColors.countryTextColor || "#4D4D4D",
-          }}
-        >
-          <div style={{ fontSize: `${0.75 * fontScale}rem`, marginBottom: "0.25rem" }}>INDIA</div>
-          <div style={{ fontSize: `${0.875 * fontScale}rem` }}>{indiaTime}</div>
-        </div>
-      </div>
-
-      {/* UK */}
-      <div className="flex flex-col items-center">
-        <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
-          <img
-            src="/uk-flag.png"
-            alt="UK Flag"
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div
-          className="px-3 py-2 rounded-lg font-bold text-center min-w-[90px]"
-          style={{
-            backgroundColor: tvColors.countryBgColor || "#FFCB84",
-            color: tvColors.countryTextColor || "#4D4D4D",
-          }}
-        >
-          <div style={{ fontSize: `${0.75 * fontScale}rem`, marginBottom: "0.25rem" }}>UK</div>
-          <div style={{ fontSize: `${0.875 * fontScale}rem` }}>{ukTime}</div>
-        </div>
-      </div>
-
-      {/* USA */}
-      <div className="flex flex-col items-center">
-        <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
-          <img
-            src="/us-flag.png"
-            alt="US Flag"
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div
-          className="px-3 py-2 rounded-lg font-bold text-center min-w-[90px]"
-          style={{
-            backgroundColor: tvColors.countryBgColor || "#FFCB84",
-            color: tvColors.countryTextColor || "#4D4D4D",
-          }}
-        >
-          <div style={{ fontSize: `${0.75 * fontScale}rem`, marginBottom: "0.25rem" }}>USA</div>
-          <div style={{ fontSize: `${0.875 * fontScale}rem` }}>{usTime}</div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Header Component
-const Header: React.FC = () => {
-  const [dateTime, setDateTime] = useState(getFormattedDate());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDateTime(getFormattedDate());
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const timezones = [
-    { country: "UAE", timezone: "Asia/Dubai", flag: "🇦🇪" },
-    { country: "INDIA", timezone: "Asia/Kolkata", flag: "🇮🇳" },
-    { country: "UK", timezone: "Europe/London", flag: "🇬🇧" },
-    { country: "USA", timezone: "America/New_York", flag: "🇺🇸" },
-  ];
-
-  return (
-    <div className="flex items-start justify-between w-full mb-8">
-      {/* Left timezone - UAE aligned to top */}
-      <div className="flex-none">
-        <TimezoneClock {...timezones[0]} />
-      </div>
-
-      {/* Center content */}
-      <div className="flex flex-col items-center">
-        <div className="flex items-center mb-2">
-          <div className="text-white font-bold text-2xl mr-2">Dfin</div>
-          <div className="text-yellow-400 text-sm">TECHNOLOGIES</div>
-        </div>
-        <div className="text-center">
-          <div className="text-yellow-300 text-lg font-bold whitespace-pre-line">
-            {dateTime}
-          </div>
-        </div>
-      </div>
-
-      {/* Right timezones - evenly spaced and pushed down to align with UAE */}
-      <div className="flex gap-8 flex-none mt-6">
-        {timezones.slice(1).map((tz, index) => (
-          <TimezoneClock key={index} {...tz} />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Data Table Component
-const DataTable: React.FC<{
-  rates: MetalRates | null;
-  loading: boolean;
-  tvColors: TvColorScheme;
-}> = ({ rates, loading, tvColors }) => {
-  const fontScale = useTVFontScale();
-  const tableData = [
-    { key: "gramNineOneSix", label: "GRAM", weight: "1GM", purity: "22K" },
-    { key: "gramPrice", label: "GRAM", weight: "1GM", purity: "24K" },
-    { key: "ttbPrice", label: "TTB", weight: "1Ttb", purity: "" },
-    { key: "nineNineFive", label: "995", weight: "1 Kg", purity: "" },
-    { key: "tripleNinePointFive", label: "999.9", weight: "1 Kg", purity: "" },
-  ];
-
-  return (
-    <div className="h-full flex flex-col" style={{ paddingTop: "0rem", paddingBottom: "0.75rem" }}>
-      {/* Table Header */}
-      <div
-        className="rounded-3xl p-3 mb-3 flex items-center"
-        style={{
-          backgroundColor: tvColors.metalTableHeaderBgColor || "#F6111C",
-          height: "9.5vh",
-        }}
-      >
-        <div className="grid grid-cols-4 gap-4 text-center w-full">
-          <div
-            className="font-bold"
-            style={{ 
-              color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
-              fontSize: `${1.25 * fontScale}rem`
-            }}
-          >
-            METAL
-          </div>
-          <div
-            className="font-bold"
-            style={{ 
-              color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
-              fontSize: `${1.25 * fontScale}rem`
-            }}
-          >
-            WEIGHT
-          </div>
-          <div
-            className="font-bold"
-            style={{ 
-              color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
-              fontSize: `${1.25 * fontScale}rem`
-            }}
-          >
-            BID (AED)
-          </div>
-          <div
-            className="font-bold"
-            style={{ 
-              color: tvColors.metalTableHeaderTextColor || "#FFFFFF",
-              fontSize: `${1.25 * fontScale}rem`
-            }}
-          >
-            ASK (AED)
-          </div>
-        </div>
-      </div>
-
-      {/* Table Rows */}
-      <div className="flex flex-col space-y-1 flex-1">
-        {tableData.map((item, index) => {
-          const rateData = rates?.[item.key as keyof MetalRates] as
-            | { bid: number; ask: number }
-            | undefined;
-
-          return (
-            <div
-              key={index}
-              className="rounded-3xl p-3 flex items-center"
-              style={{
-                backgroundColor: tvColors.metalTableRowBgColor || "#FFCB84",
-                color: tvColors.metalTableRowTextColor || "#4D4D4D",
-                height: "8.3vh",
-              }}
-            >
-              <div className="grid grid-cols-4 gap-4 text-center items-center w-full">
-                <div className="font-bold" style={{ fontSize: `${1.3 * fontScale}rem` }}>
-                  {item.label}
-                  {item.purity && (
-                    <span className="ml-1" style={{ fontSize: `${1.15 * fontScale}rem` }}>{item.purity}</span>
-                  )}
-                </div>
-                <div className="font-bold" style={{ fontSize: `${1.3 * fontScale}rem` }}>{item.weight}</div>
-                <div className="font-bold" style={{ fontSize: `${1.3 * fontScale}rem` }}>
-                  {!loading && rateData ? (
-                    rateData.bid.toLocaleString()
-                  ) : (
-                    <PriceLoader />
-                  )}
-                </div>
-                <div className="font-bold" style={{ fontSize: `${1.3 * fontScale}rem` }}>
-                  {!loading && rateData ? (
-                    rateData.ask.toLocaleString()
-                  ) : (
-                    <PriceLoader />
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-// Price Cards Component
-const PriceCards: React.FC<{
-  rates: MetalRates | null;
-  loading: boolean;
-  priceChanges: PriceChanges;
-}> = ({ rates, loading, priceChanges }) => {
-  return (
-    <div className="grid grid-cols-2 gap-6 mb-8">
-      {/* Gold Card */}
-      <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-3xl p-6 relative overflow-hidden">
-        <div className="absolute top-4 right-4">
-          <div className="w-16 h-12 bg-yellow-300 rounded-lg flex items-center justify-center">
-            <span className="text-2xl">🥇</span>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <div className="bg-yellow-400 text-black px-4 py-2 rounded-2xl inline-block">
-            <span className="font-bold text-sm">GOLD OZ</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="text-black font-bold text-lg mb-2">BID</div>
-            <div
-              className={`text-2xl font-bold p-3 rounded-xl ${
-                priceChanges?.bidPriceIncreased
-                  ? "bg-green-500 text-white"
-                  : priceChanges?.bidPriceDecreased
-                  ? "bg-red-500 text-white"
-                  : "bg-red-600 text-white"
-              }`}
-            >
-              {!loading && rates ? (
-                rates.ouncePriceUsd?.bid.toFixed(3)
-              ) : (
-                <PriceLoader />
-              )}
-            </div>
-            <div className="text-black text-xs mt-1">
-              Day Low {rates?.ouncePriceUsd?.bid.toFixed(3) || "---"}
-            </div>
-          </div>
-
-          <div>
-            <div className="text-black font-bold text-lg mb-2">ASK</div>
-            <div
-              className={`text-2xl font-bold p-3 rounded-xl ${
-                priceChanges?.askPriceIncreased
-                  ? "bg-green-500 text-white"
-                  : priceChanges?.askPriceDecreased
-                  ? "bg-red-500 text-white"
-                  : "bg-green-600 text-white"
-              }`}
-            >
-              {!loading && rates ? (
-                rates.ouncePriceUsd?.ask.toFixed(3)
-              ) : (
-                <PriceLoader />
-              )}
-            </div>
-            <div className="text-black text-xs mt-1">
-              Day High {rates?.ouncePriceUsd?.ask.toFixed(3) || "---"}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Silver Card */}
-      <div className="bg-gradient-to-br from-gray-400 to-gray-600 rounded-3xl p-6 relative overflow-hidden">
-        <div className="absolute top-4 right-4">
-          <div className="w-16 h-12 bg-gray-300 rounded-lg flex items-center justify-center">
-            <span className="text-2xl">🥈</span>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <div className="bg-red-600 text-white px-4 py-2 rounded-2xl inline-block">
-            <span className="font-bold text-sm">SILVER OZ</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="text-white font-bold text-lg mb-2">BID</div>
-            <div
-              className={`text-2xl font-bold p-3 rounded-xl ${
-                priceChanges?.silverBidPriceIncreased
-                  ? "bg-green-500 text-white"
-                  : priceChanges?.silverBidPriceDecreased
-                  ? "bg-red-500 text-white"
-                  : "bg-red-600 text-white"
-              }`}
-            >
-              {!loading && rates ? (
-                rates.silverOuncePriceUsd?.bid.toFixed(3)
-              ) : (
-                <PriceLoader />
-              )}
-            </div>
-            <div className="text-white text-xs mt-1">
-              Day Low {rates?.silverOuncePriceUsd?.bid.toFixed(3) || "---"}
-            </div>
-          </div>
-
-          <div>
-            <div className="text-white font-bold text-lg mb-2">ASK</div>
-            <div
-              className={`text-2xl font-bold p-3 rounded-xl ${
-                priceChanges?.silverAskPriceIncreased
-                  ? "bg-green-500 text-white"
-                  : priceChanges?.silverAskPriceDecreased
-                  ? "bg-red-500 text-white"
-                  : "bg-green-600 text-white"
-              }`}
-            >
-              {!loading && rates ? (
-                rates.silverOuncePriceUsd?.ask.toFixed(3)
-              ) : (
-                <PriceLoader />
-              )}
-            </div>
-            <div className="text-white text-xs mt-1">
-              Day High {rates?.silverOuncePriceUsd?.ask.toFixed(3) || "---"}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Scrolling Banner Component
-const ScrollingBanner: React.FC = () => {
-  return (
-    <div className="bg-yellow-400 text-black py-3 fixed bottom-0 left-0 w-full overflow-hidden">
-      <div className="animate-marquee whitespace-nowrap">
-        <span className="text-sm font-bold">
-          Gold News: New Gold news!! New Gold news!!New Gold news!!New Gold
-          news!!New Gold news!!New Gold news!!New Gold news!!New Go
-        </span>
-      </div>
-    </div>
-  );
-};
-
-// Footer
-const Footer: React.FC = () => {
-  return (
-    <div className="text-center py-4 mb-16">
-      <span className="text-white text-sm">
-        Powered by Dfin Technologies LLC
-      </span>
-    </div>
-  );
-};
-
-export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "Live Gold & Silver Prices" },
-    {
-      name: "description",
-      content: "Real-time gold and silver price tracking",
-    },
-  ];
-}
-
-// UAE Time Hook
 const useUAETime = () => {
   const [time, setTime] = useState(
     new Date().toLocaleTimeString("en-US", {
@@ -1290,383 +331,739 @@ const useUAETime = () => {
   return time;
 };
 
-// Authentication wrapper component
-const AuthenticatedHome: React.FC = () => {
+const ShimmerLoader: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <div className={`bg-gradient-to-r from-amber-200 to-amber-400 animate-pulse rounded ${className}`} />
+);
+
+const PriceLoader: React.FC = () => (
+  <div className="w-20 h-6 bg-amber-200 rounded animate-pulse" />
+);
+
+const PriceChangeIndicator: React.FC<{
+  delta: PriceDelta | null;
+  fontScale?: number;
+  showZero?: boolean;
+}> = ({ delta, fontScale = 1, showZero = false }) => {
+  const isUp = !delta || delta.direction === "up";
+  const color = isUp ? DASHBOARD.green : DASHBOARD.red;
+  const percent = delta ? Math.abs(delta.percent) : 0;
+  const aed = delta ? Math.abs(delta.value) : 0;
+  const sign = isUp ? "+" : "-";
+  const arrow = isUp ? "▲" : "▼";
+
+  if (!showZero && (!delta || (delta.percent === 0 && delta.value === 0))) {
+    return <span className="invisible text-xs">-</span>;
+  }
+
+  return (
+    <div
+      className="flex items-center justify-between w-full mt-3 tv-condensed"
+      style={{
+        color,
+        fontSize: `${1.05 * fontScale}rem`,
+        lineHeight: 1,
+      }}
+    >
+      <span className="font-bold whitespace-nowrap">
+        {arrow} {sign}
+        {percent.toFixed(2)}%
+      </span>
+
+      <span className="font-bold whitespace-nowrap">
+        {sign}
+        {aed.toFixed(aed < 1 ? 3 : 2)} AED
+      </span>
+    </div>
+  );
+};
+
+const TableChangeCell: React.FC<{
+  bid: number | undefined;
+  fontScale: number;
+}> = ({ bid, fontScale }) => {
+  const delta = usePriceDelta(bid);
+  const isUp = !delta || delta.direction === "up";
+  const color = isUp ? DASHBOARD.green : DASHBOARD.red;
+  const percent = delta ? Math.abs(delta.percent) : 0;
+
+  return (
+    <span
+      className="tv-condensed font-bold whitespace-nowrap"
+      style={{
+        color,
+        fontSize: `${1.15 * fontScale}rem`,
+        lineHeight: 1,
+      }}
+    >
+      {isUp ? "▲" : "▼"} {percent.toFixed(2)}%
+    </span>
+  );
+};
+
+const SpotPriceColumn: React.FC<{
+  label: string;
+  price: number | undefined;
+  loading: boolean;
+  decimals: number;
+  labelColor: string;
+  priceColor: string;
+  dividerColor: string;
+  showDivider?: boolean;
+}> = ({
+  label,
+  price,
+  loading,
+  decimals,
+  labelColor,
+  priceColor,
+  dividerColor,
+  showDivider = false,
+}) => {
   const fontScale = useTVFontScale();
-  const [isLoading, setIsLoading] = useState(true);
-  const [previousRates, setPreviousRates] = useState<MetalRates | null>(null);
-  const [priceChanges, setPriceChanges] = useState<PriceChanges>({});
-  const [tvColors, setTvColors] = useState<TvColorScheme>(
-    DEFAULT_TV_COLOR_SCHEME
-  );
-  const uaeTime = useUAETime();
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [isClient, setIsClient] = useState(false);
-
-  // Set client flag and current date on mount
-  useEffect(() => {
-    setIsClient(true);
-    setCurrentDate(new Date());
-  }, []);
-
-  // --- Market Closed Banner Logic ---
-  const [showMarketClosedBanner, setShowMarketClosedBanner] = useState(false);
-
-  // Load TV color scheme on component mount and refresh user data
-  useEffect(() => {
-    const loadTvColors = () => {
-      const colors = getTvColorScheme();
-      console.log("Setting TV colors:", colors);
-      setTvColors(colors);
-    };
-
-    const initializeData = async () => {
-      // First, try to refresh user data to get latest colors
-      const refreshed = await refreshUserData();
-      if (refreshed) {
-        console.log("User data refreshed successfully");
-      } else {
-        console.log("Using cached user data");
-      }
-
-      // Load TV colors (either refreshed or cached)
-      loadTvColors();
-    };
-
-    initializeData();
-
-    // Also listen for storage changes in case user data is updated
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "user-data") {
-        console.log("User data changed, reloading TV colors");
-        loadTvColors();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
-
-  // Use SSE hook for real-time price updates
-  const { liveRates } = useSSE(API_URL, getUserId());
-
-  // Track price changes for animations and market closed logic
-  useEffect(() => {
-    if (liveRates && previousRates) {
-
-      console.log("liveRates", liveRates);
-      const changes: PriceChanges = {};
-      // Gold price changes
-      if (liveRates.ouncePriceUsd?.bid !== previousRates.ouncePriceUsd?.bid) {
-        changes.bidPriceIncreased =
-          liveRates.ouncePriceUsd?.bid > previousRates.ouncePriceUsd?.bid;
-        changes.bidPriceDecreased =
-          liveRates.ouncePriceUsd?.bid < previousRates.ouncePriceUsd?.bid;
-      }
-      if (liveRates.ouncePriceUsd?.ask !== previousRates.ouncePriceUsd?.ask) {
-        changes.askPriceIncreased =
-          liveRates.ouncePriceUsd?.ask > previousRates.ouncePriceUsd?.ask;
-        changes.askPriceDecreased =
-          liveRates.ouncePriceUsd?.ask < previousRates.ouncePriceUsd?.ask;
-      }
-      // Silver price changes
-      if (
-        liveRates.silverOuncePriceUsd?.bid !==
-        previousRates.silverOuncePriceUsd?.bid
-      ) {
-        changes.silverBidPriceIncreased =
-          liveRates.silverOuncePriceUsd?.bid >
-          previousRates.silverOuncePriceUsd?.bid;
-        changes.silverBidPriceDecreased =
-          liveRates.silverOuncePriceUsd?.bid <
-          previousRates.silverOuncePriceUsd?.bid;
-      }
-      if (
-        liveRates.silverOuncePriceUsd?.ask !==
-        previousRates.silverOuncePriceUsd?.ask
-      ) {
-        changes.silverAskPriceIncreased =
-          liveRates.silverOuncePriceUsd?.ask >
-          previousRates.silverOuncePriceUsd?.ask;
-        changes.silverAskPriceDecreased =
-          liveRates.silverOuncePriceUsd?.ask <
-          previousRates.silverOuncePriceUsd?.ask;
-      }
-      setPriceChanges(changes);
-      // Reset price change indicators after 2 seconds
-      setTimeout(() => {
-        setPriceChanges({});
-      }, 2000);
-    }
-
-    // --- Market Closed Banner Logic ---
-    if (liveRates) {
-      // Use backend market closed status
-      setShowMarketClosedBanner(liveRates.isMarketClosed || false);
-    }
-
-    if (liveRates) {
-      setPreviousRates(liveRates);
-      setIsLoading(false);
-    }
-  }, [liveRates]);
-
-  // Debug log for background color
-  console.log(
-    "Current TV background color:",
-    tvColors.backgroundColor || "#5D0004"
-  );
+  const delta = usePriceDelta(price);
 
   return (
     <>
-      <div
-        className="flex flex-col h-screen text-white relative overflow-hidden"
-        style={{
-          fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif",
-          backgroundColor: tvColors.backgroundColor || "#5D0004",
-        }}
-      >
-        {/* Power Button */}
-        <div className="flex justify-end px-6 pt-2">
-          <button
-            onClick={handleLogout}
-            className="text-white hover:text-gray-300 p-3 transition-colors duration-200 z-50 cursor-pointer"
-            title="Power Off"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
-              <line x1="12" y1="2" x2="12" y2="12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Header Section with all flags aligned */}
-        <div className="flex items-end w-full px-6" style={{height: "16vh", paddingTop: "3vh"}}>
-          {/* Left Side Container - matching price chart width exactly */}
-          <div className="flex items-end justify-between w-[58%] pr-6">
-            {/* UAE Flag - Start */}
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
-                <img
-                  src="/uae-flag.png"
-                  alt="UAE Flag"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div
-                className="text-black px-3 py-2 rounded-lg font-bold text-center min-w-[90px]"
-                style={{
-                  backgroundColor: tvColors.countryBgColor || "#FFCB84",
-                  color: tvColors.countryTextColor || "#4D4D4D",
-                }}
-              >
-                <div style={{ fontSize: `${0.75 * fontScale}rem`, marginBottom: "0.25rem" }}>UAE</div>
-                <div style={{ fontSize: `${0.875 * fontScale}rem` }}>{uaeTime}</div>
-              </div>
-            </div>
-
-            {/* Company Logo */}
-            <div className="flex items-center justify-center" style={{height: "100%"}}>
-              {isClient && getCompanyLogo() && (
-                <img
-                  src={getCompanyLogo()!}
-                  alt="Logo"
-                  className="h-[11vw] max-h-[11vw] w-[28vw] max-w-[28vw] object-contain mx-auto"
-                  style={{ display: 'block' }}
-                  onError={({ currentTarget: target }) => { target.style.display = "none"; }}
-                />
-              )}
-            </div>
-
-            {/* Date - End */}
-<div className="flex flex-col items-end relative" style={{ minWidth: '10vw' }}>
-  {/* Closed Banner Overlay (conditionally shown) */}
-  {showMarketClosedBanner && (
-    <>
-      <div className="relative w-full flex justify-center items-center">
-        <img
-          src="/closed-banner.png"
-          alt="Closed Banner"
-          className="absolute left-1/2 z-30 w-[22vw] max-w-[28vw] drop-shadow-lg"
-          style={{
-            pointerEvents: 'none',
-            top: '-9vw',
-            transform: 'translate(-50%, 0%) rotate(-7deg)',
-          }}
-        />
-        {/* Banner Text Overlay - perfectly centered */}
+      {showDivider && (
         <div
-          className="absolute z-40 left-[41%] top-1/2 w-[18vw] max-w-[24vw] text-center font-normal text-[#5D0004] pointer-events-none -translate-x-1/2 -translate-y-1/2 rotate-[-18deg] text-[2.2vw] leading-[1.22] font-manrope"
+          className="w-px self-stretch opacity-80 mx-6"
+          style={{ backgroundColor: dividerColor }}
+        />
+      )}
+
+      <div className="flex-1 flex flex-col justify-center px-3 min-w-0">
+        <span
+          className="tv-condensed font-semibold uppercase"
+          style={{
+            color: labelColor,
+            fontSize: `${1.25 * fontScale}rem`,
+            lineHeight: 1,
+          }}
         >
-          <div className="font-bold">MARKET</div>
-          <div className="font-bold">CLOSED!</div>
-        </div>
-      </div>
-    </>
-  )}
-<div className="text-white font-bold" >
-  {/* Date */}
-  {currentDate.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  })}
+          {label}
+        </span>
 
-  {/* Weekday */}
-  <div className="text-white font-bold text-2xl" >
-    {currentDate.toLocaleDateString("en-US", { weekday: "long" })}
-  </div>
-</div>
-
-
-</div>
-          </div>
-
-          {/* Right - Other Country Flags */}
-          <div className="w-[42%] pl-6">
-            <CountryTimeHeader tvColors={tvColors} />
-          </div>
-        </div>
-
-        <main className="flex flex-1 w-full overflow-visible" style={{marginTop: "2vh"}}>
-          <div className="flex-none w-[58%] h-full p-6 overflow-visible">
-            <div style={{marginTop: "-0.5rem"}}>
-              <DataTable
-                rates={liveRates}
-                loading={isLoading}
-                tvColors={tvColors}
-              />
-            </div>
-          </div>
-          <div className="flex-none w-[42%] h-full p-6 overflow-visible">
-            <div className="pt-2">
-              <PriceCard
-                rates={liveRates}
-                loading={isLoading}
-                tvColors={tvColors}
-              />
-            </div>
-          </div>
-        </main>
-
-        {/* Bottom Banner */}
-        <footer className="px-6" style={{height: "17vh", display: "flex", flexDirection: "column", justifyContent: "center"}}>
-          <div
-            className="rounded-full px-12 w-full flex items-center justify-center"
-            style={{
-              backgroundColor: tvColors.bottomBannerBgColor || "#FFCB84",
-              height: "6vh",
-            }}
-          >
-            <div className="text-center">
-              <span
-                className="font-bold"
-                style={{ 
-                  color: tvColors.bottomBannerTextColor || "#4D4D4D",
-                  fontSize: `${1 * fontScale}rem`
-                }}
-              >
-The price shown is indicative. Please contact us for booking
-                {/* Gold market's closed today. It'll be back online when trading resumes Monday morning. */}
-                {/* Gold News: New Gold news!! New Gold news!!New Gold news!!New
-                Gold news!!New Gold news!!New Gold news!!New Gold news!!New Go */}
-              </span>
-            </div>
-          </div>
-          <div className="text-center" style={{marginTop: "1.5vh"}}>
-            <span className="text-white text-sm">
-              Powered by Dfin Technologies LLC
+        {!loading && price !== undefined ? (
+          <>
+            <span
+              className="tv-price block mt-2"
+              style={{
+                color: priceColor,
+                fontSize: `${5.1 * fontScale}rem`,
+                lineHeight: 0.9,
+              }}
+            >
+              {price.toFixed(decimals)}
             </span>
-          </div>
-        </footer>
+
+            <PriceChangeIndicator delta={delta} fontScale={fontScale} showZero />
+          </>
+        ) : (
+          <ShimmerLoader className="w-48 h-20 mt-4" />
+        )}
       </div>
     </>
   );
 };
 
-// Main Home Component with Authentication Check
+const MetalSpotCard: React.FC<{
+  metal: "gold" | "silver";
+  rates: MetalRates | null;
+  loading: boolean;
+}> = ({ metal, rates, loading }) => {
+  const fontScale = useTVFontScale();
+  const isGold = metal === "gold";
+
+  const bid = isGold ? rates?.ouncePriceUsd?.bid : rates?.silverOuncePriceUsd?.bid;
+  const ask = isGold ? rates?.ouncePriceUsd?.ask : rates?.silverOuncePriceUsd?.ask;
+
+  const decimals = isGold ? 2 : 3;
+  const accent = isGold ? DASHBOARD.gold : DASHBOARD.silver;
+  const priceColor = isGold ? DASHBOARD.goldBright : DASHBOARD.silverBright;
+
+  return (
+    <div
+      className="flex-1 flex flex-col h-full border-r last:border-r-0"
+      style={{
+        borderColor: DASHBOARD.border,
+        background:
+          isGold
+            ? "linear-gradient(135deg, #fff8df 0%, #fffdf7 45%, #f4e2b8 100%)"
+            : "linear-gradient(135deg, #edf7ff 0%, #ffffff 45%, #dbe8f2 100%)",
+      }}
+    >
+      <div className="flex items-center gap-4 px-10 pt-6 pb-1">
+        <img
+          src={isGold ? "/gold-bar.png" : "/silver-bar.png"}
+          alt={isGold ? "Gold" : "Silver"}
+          className="object-contain"
+          style={{
+            width: "clamp(2.8rem, 4.2vw, 4.4rem)",
+            height: "auto",
+          }}
+        />
+
+        <span
+          className="tv-condensed font-extrabold uppercase"
+          style={{
+            color: accent,
+            fontSize: `${2 * fontScale}rem`,
+            lineHeight: 1,
+          }}
+        >
+          {isGold ? "GOLD OZ" : "SILVER OZ"}
+        </span>
+      </div>
+
+      <div className="flex flex-1 items-stretch px-8 pb-6">
+        <SpotPriceColumn
+          label="BID"
+          price={bid}
+          loading={loading}
+          decimals={decimals}
+          labelColor={DASHBOARD.textMuted}
+          priceColor={priceColor}
+          dividerColor={accent}
+        />
+
+        <SpotPriceColumn
+          label="ASK"
+          price={ask}
+          loading={loading}
+          decimals={decimals}
+          labelColor={DASHBOARD.textMuted}
+          priceColor={priceColor}
+          dividerColor={accent}
+          showDivider
+        />
+      </div>
+    </div>
+  );
+};
+
+const SpotPricesRow: React.FC<PriceCardProps> = ({ rates = null, loading = false }) => (
+  <section
+    className="flex w-full shrink-0 border-b"
+    style={{ borderColor: DASHBOARD.border, minHeight: "32vh" }}
+  >
+    <MetalSpotCard metal="gold" rates={rates} loading={loading} />
+    <MetalSpotCard metal="silver" rates={rates} loading={loading} />
+  </section>
+);
+
+const MarketStatusBadge: React.FC<{ isOpen: boolean; fontScale?: number }> = ({
+  isOpen,
+  fontScale = 1,
+}) => (
+  <div className="flex items-center gap-2">
+    <span className={`w-2 h-2 rounded-full ${isOpen ? "bg-green-500" : "bg-red-500"}`} />
+    <span
+      className="tv-condensed font-bold tracking-widest uppercase"
+      style={{
+        color: isOpen ? DASHBOARD.green : DASHBOARD.red,
+        fontSize: `${0.9 * fontScale}rem`,
+      }}
+    >
+      MARKET {isOpen ? "OPEN" : "CLOSED"}
+    </span>
+  </div>
+);
+
+const MetalTableHeader: React.FC<{
+  logoSrc: string;
+  currentDate: Date;
+  isMarketOpen: boolean;
+}> = ({ logoSrc, currentDate, isMarketOpen }) => {
+  const fontScale = useTVFontScale();
+  const dateStr = currentDate
+    .toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+    .replace(/ /g, " ")
+    .toUpperCase();
+
+  return (
+    <div
+      className="flex items-center justify-between px-5 py-3 border-b shrink-0"
+      style={{ borderColor: DASHBOARD.border, backgroundColor: "#fff8e8" }}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <img
+          src={logoSrc}
+          alt="Company logo"
+          className="h-10 w-auto object-contain shrink-0"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (!target.src.includes("dfin-logo")) target.src = "/dfin-logo.png";
+          }}
+        />
+      </div>
+
+      <div className="flex items-center gap-8">
+        <span
+          className="tv-condensed font-bold uppercase"
+          style={{ color: DASHBOARD.goldBright, fontSize: `${1.15 * fontScale}rem` }}
+        >
+          {dateStr}
+        </span>
+
+        <div className="w-px h-6 opacity-70" style={{ backgroundColor: DASHBOARD.gold }} />
+
+        <MarketStatusBadge isOpen={isMarketOpen} fontScale={fontScale} />
+      </div>
+
+      <span
+        className="tv-condensed font-medium uppercase shrink-0"
+        style={{ color: DASHBOARD.textMuted, fontSize: `${0.85 * fontScale}rem` }}
+      >
+        PRICES IN AED
+      </span>
+    </div>
+  );
+};
+
+const DataTable: React.FC<{
+  rates: MetalRates | null;
+  loading: boolean;
+  logoSrc: string;
+  currentDate: Date;
+  isMarketOpen: boolean;
+}> = ({ rates, loading, logoSrc, currentDate, isMarketOpen }) => {
+  const fontScale = useTVFontScale();
+
+  const tableData = [
+    { key: "gramNineOneSix", label: "GRAM", weight: "1GM", purity: "22K" },
+    { key: "gramPrice", label: "GRAM", weight: "1GM", purity: "24K" },
+    { key: "ttbPrice", label: "TTB", weight: "1Ttb", purity: "" },
+    { key: "nineNineFive", label: "995", weight: "1 Kg", purity: "" },
+    { key: "tripleNinePointFive", label: "999.9", weight: "1 Kg", purity: "" },
+  ];
+
+  const formatPrice = (n: number) =>
+    n.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  return (
+    <div
+      className="h-full flex flex-col flex-1 min-w-0 border rounded-lg overflow-hidden"
+      style={{ backgroundColor: DASHBOARD.panel, borderColor: DASHBOARD.border }}
+    >
+      <MetalTableHeader
+        logoSrc={logoSrc}
+        currentDate={currentDate}
+        isMarketOpen={isMarketOpen}
+      />
+
+      <div
+        className="grid gap-2 text-center w-full px-4 py-2 border-b shrink-0"
+        style={{
+          gridTemplateColumns: "1.4fr 0.8fr 1.2fr 1.2fr 0.9fr",
+          borderColor: DASHBOARD.border,
+          backgroundColor: "#f7ead0",
+        }}
+      >
+        {["METAL", "WEIGHT", "BID (AED)", "ASK (AED)", "CHANGE"].map((header) => (
+          <div
+            key={header}
+            className="tv-condensed font-bold uppercase"
+            style={{ color: DASHBOARD.gold, fontSize: `${1 * fontScale}rem` }}
+          >
+            {header}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col flex-1">
+        {tableData.map((item, index) => {
+          const rateData = rates?.[item.key as keyof MetalRates] as
+            | { bid: number; ask: number }
+            | undefined;
+
+          const rowBg = index % 2 === 0 ? DASHBOARD.panelRow : DASHBOARD.panelRowAlt;
+
+          return (
+            <div
+              key={item.key}
+              className="grid gap-2 text-center items-center px-4 border-b last:border-b-0 flex-1"
+              style={{
+                gridTemplateColumns: "1.4fr 0.8fr 1.2fr 1.2fr 0.9fr",
+                backgroundColor: rowBg,
+                borderColor: DASHBOARD.border,
+              }}
+            >
+              <div
+                className="tv-condensed font-bold text-left pl-2"
+                style={{ color: DASHBOARD.text, fontSize: `${1.25 * fontScale}rem` }}
+              >
+                {item.label}
+                {item.purity && (
+                  <span className="ml-2 font-bold" style={{ color: DASHBOARD.text }}>
+                    {item.purity}
+                  </span>
+                )}
+              </div>
+
+              <div
+                className="tv-condensed"
+                style={{ color: DASHBOARD.textMuted, fontSize: `${1.1 * fontScale}rem` }}
+              >
+                {item.weight}
+              </div>
+
+              <div
+                className="tv-table-price"
+                style={{
+                  color: DASHBOARD.goldBright,
+                  fontSize: `${1.35 * fontScale}rem`,
+                }}
+              >
+                {!loading && rateData ? formatPrice(rateData.bid) : <PriceLoader />}
+              </div>
+
+              <div
+                className="tv-table-price"
+                style={{
+                  color: DASHBOARD.goldBright,
+                  fontSize: `${1.35 * fontScale}rem`,
+                }}
+              >
+                {!loading && rateData ? formatPrice(rateData.ask) : <PriceLoader />}
+              </div>
+
+              <div>
+                {!loading && rateData ? (
+                  <TableChangeCell bid={rateData.bid} fontScale={fontScale} />
+                ) : (
+                  <PriceLoader />
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const WorldClockRow: React.FC<{
+  country: string;
+  timezone: string;
+  flagSrc: string;
+  offset: string;
+  fontScale: number;
+  isLast?: boolean;
+}> = ({ country, timezone, flagSrc, offset, fontScale, isLast }) => {
+  const [time, setTime] = useState(getTimeForTimezone(timezone));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTime(getTimeForTimezone(timezone));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timezone]);
+
+  return (
+    <div
+      className={`flex items-center gap-5 px-5 py-4 ${!isLast ? "border-b" : ""}`}
+      style={{ borderColor: DASHBOARD.border }}
+    >
+      <div
+        className="rounded-full overflow-hidden shrink-0 border bg-white"
+        style={{
+          width: "clamp(3rem, 4.4vw, 4rem)",
+          height: "clamp(3rem, 4.4vw, 4rem)",
+          borderColor: DASHBOARD.border,
+        }}
+      >
+        <img src={flagSrc} alt={country} className="w-full h-full object-cover" />
+      </div>
+
+      <div className="flex items-center justify-between flex-1 min-w-0 gap-4">
+        <div className="flex flex-col min-w-0">
+          <span
+            className="tv-condensed font-bold uppercase"
+            style={{ color: DASHBOARD.gold, fontSize: `${1.15 * fontScale}rem` }}
+          >
+            {country}
+          </span>
+
+          <span
+            className="tv-condensed"
+            style={{ color: DASHBOARD.textMuted, fontSize: `${0.8 * fontScale}rem` }}
+          >
+            {offset}
+          </span>
+        </div>
+
+        <span
+          className="tv-condensed font-bold uppercase whitespace-nowrap"
+          style={{
+            color: DASHBOARD.text,
+            fontSize: `${1.8 * fontScale}rem`,
+            lineHeight: 1,
+          }}
+        >
+          {time}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const WorldClocksPanel: React.FC = () => {
+  const fontScale = useTVFontScale();
+
+  return (
+    <aside
+      className="h-full flex flex-col border rounded-lg overflow-hidden shrink-0"
+      style={{
+        width: "28%",
+        borderColor: DASHBOARD.border,
+        backgroundColor: DASHBOARD.panel,
+      }}
+    >
+      {WORLD_CLOCKS.map((clock, index) => (
+        <WorldClockRow
+          key={clock.country}
+          {...clock}
+          fontScale={fontScale}
+          isLast={index === WORLD_CLOCKS.length - 1}
+        />
+      ))}
+    </aside>
+  );
+};
+
+const DashboardFooter: React.FC<{ time: string }> = ({ time }) => {
+  const newsText =
+    "Global markets steady as investors await key economic data this week...";
+
+  return (
+    <footer
+      className="flex flex-col border-t shrink-0"
+      style={{
+        borderColor: DASHBOARD.border,
+        backgroundColor: "#fffaf0",
+        minHeight: "12vh",
+      }}
+    >
+      <div className="flex items-center gap-4 px-6 py-3 border-b" style={{ borderColor: DASHBOARD.border }}>
+        <div className="flex items-center gap-2 shrink-0" style={{ maxWidth: "38%" }}>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke={DASHBOARD.gold}
+            strokeWidth="2"
+            className="shrink-0"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+
+          <span className="text-sm leading-snug" style={{ color: DASHBOARD.text }}>
+            The price shown is indicative. Please contact us for booking.
+          </span>
+        </div>
+
+        <div className="w-px self-stretch shrink-0 opacity-70" style={{ backgroundColor: DASHBOARD.gold }} />
+
+        <div className="flex-1 flex items-center overflow-hidden min-w-0 gap-4">
+          <span className="tv-condensed font-bold shrink-0" style={{ color: DASHBOARD.gold, fontSize: "1.25rem" }}>
+            GOLD NEWS:
+          </span>
+
+          <span className="text-sm truncate" style={{ color: DASHBOARD.text }}>
+            {newsText}
+          </span>
+        </div>
+
+        <span
+          className="tv-condensed font-bold shrink-0 uppercase"
+          style={{ color: DASHBOARD.gold, fontSize: "1.25rem" }}
+        >
+          {time}
+        </span>
+      </div>
+
+      <div className="flex items-center px-6 py-2 gap-6 overflow-hidden">
+        {[
+          "GOLD 4471.60 ▲ 0.14%",
+          "SILVER 73.133 ▼ -0.02%",
+          "DOW JONES 42,654.74 ▲ 0.15%",
+          "NASDAQ 18,987.91 ▲ 0.21%",
+          "S&P 500 5,980.87 ▲ 0.17%",
+          "USD INDEX 104.32 ▼ -0.14%",
+        ].map((item, index) => {
+          const isDown = item.includes("▼");
+
+          return (
+            <div
+              key={item}
+              className={`tv-condensed whitespace-nowrap ${index !== 0 ? "border-l pl-6" : ""}`}
+              style={{
+                borderColor: DASHBOARD.border,
+                color: DASHBOARD.text,
+                fontSize: "1rem",
+              }}
+            >
+              {item.split("▲")[0].split("▼")[0]}
+              <span style={{ color: isDown ? DASHBOARD.red : DASHBOARD.green }}>
+                {isDown ? "▼" : "▲"}
+                {item.split(isDown ? "▼" : "▲")[1]}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </footer>
+  );
+};
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Live Gold & Silver Prices" },
+    {
+      name: "description",
+      content: "Real-time gold and silver price tracking",
+    },
+  ];
+}
+
+const AuthenticatedHome: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [isClient, setIsClient] = useState(false);
+  const [isMarketClosed, setIsMarketClosed] = useState(false);
+
+  const uaeTime = useUAETime();
+  const { liveRates } = useSSE(API_URL, getUserId());
+
+  useEffect(() => {
+    setIsClient(true);
+
+    const tick = () => setCurrentDate(new Date());
+    tick();
+
+    const interval = setInterval(tick, 60_000);
+    refreshUserData();
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (liveRates) {
+      setIsMarketClosed(liveRates.isMarketClosed || false);
+      setIsLoading(false);
+    }
+  }, [liveRates]);
+
+  const logoSrc = isClient ? getCompanyLogo() || "/dfin-logo.png" : "/dfin-logo.png";
+
+  return (
+    <div
+      className="flex flex-col h-screen w-screen relative overflow-hidden"
+      style={{
+        fontFamily: TV_FONT,
+        backgroundColor: DASHBOARD.bg,
+        color: DASHBOARD.text,
+      }}
+    >
+      <FontLoader />
+
+      <button
+        onClick={handleLogout}
+        className="absolute top-2 right-3 z-50 p-2 transition-colors cursor-pointer"
+        style={{ color: DASHBOARD.textMuted }}
+        title="Power Off"
+        type="button"
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+          <line x1="12" y1="2" x2="12" y2="12" />
+        </svg>
+      </button>
+
+      <SpotPricesRow rates={liveRates} loading={isLoading} />
+
+      <main className="flex flex-1 w-full overflow-hidden min-h-0 px-4 py-3 gap-4">
+        <DataTable
+          rates={liveRates}
+          loading={isLoading}
+          logoSrc={logoSrc}
+          currentDate={currentDate}
+          isMarketOpen={!isMarketClosed}
+        />
+
+        <WorldClocksPanel />
+      </main>
+
+      <DashboardFooter time={uaeTime} />
+    </div>
+  );
+};
+
 const Home: React.FC = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isClient, setIsClient] = useState(false);
 
-  // Check authentication on component mount
   useEffect(() => {
     setIsClient(true);
+
     const checkAuth = () => {
       if (!isAuthenticated()) {
-        // Redirect to login if not authenticated
         window.location.href = "/login";
         return;
       }
+
       setIsCheckingAuth(false);
     };
 
-    // Small delay to ensure localStorage is available
     setTimeout(checkAuth, 100);
   }, []);
 
-  // Show loading screen while checking authentication
   if (isCheckingAuth || !isClient) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-red-900 to-red-700">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: DASHBOARD.bg, color: DASHBOARD.text }}
+      >
+        <FontLoader />
+
         <div className="text-center">
-          {/* Only show logo on client side to avoid hydration mismatch */}
           {isClient && getCompanyLogo() && (
             <img
               src={getCompanyLogo()!}
               alt={getCompanyName()}
               className="h-16 w-auto mx-auto mb-4 object-contain"
               onError={(e) => {
-                // Hide logo if it fails to load
                 const target = e.target as HTMLImageElement;
                 target.style.display = "none";
               }}
             />
           )}
-          <div className="text-white text-lg">Loading...</div>
+
+          <div className="tv-condensed text-2xl">Loading...</div>
         </div>
       </div>
     );
   }
 
-  // Render the authenticated home component
   return <AuthenticatedHome />;
 };
 
 export default Home;
-// {/* <div className="container mx-auto px-6 py-8 pb-32"> */}
-// 	{/* 	<Header /> */}
-// 	{/* 	<DataTable rates={liveRates} loading={isLoading} /> */}
-// 	{/* 	<PriceCards */}
-// 	{/* 		rates={liveRates} */}
-// 	{/* 		loading={isLoading} */}
-// 	{/* 		priceChanges={priceChanges} */}
-// 	{/* 	/> */}
-// 	{/* 	<Footer /> */}
-// 	{/* </div> */}
-// 	{/**/}
-// 	{/* <ScrollingBanner /> */}
-// 	{/**/}
-// 	{/* {/* Custom CSS for animations */} */}
-// 	{/* <style */}
-// 	{/* 	dangerouslySetInnerHTML={{ */}
-// 	{/* 		__html: ` */}
-// 	{/*        @keyframes marquee { */}
-// 	{/*          0% { transform: translateX(100%); } */}
-// 	{/*          100% { transform: translateX(-100%); } */}
-// 	{/*        } */}
-// 	{/*        .animate-marquee { */}
-// 	{/*          animation: marquee 20s linear infinite; */}
-// 	{/*        } */}
-// 	{/*      `, */}
-// 	{/* 	}} */}
-// 	{/* /> */}

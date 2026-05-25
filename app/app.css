@@ -20,3 +20,38 @@ body {
 * {
   font-family: "Manrope", ui-sans-serif, system-ui, sans-serif !important;
 }
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: inline-flex;
+  animation: marquee 40s linear infinite;
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 6px #22c55e;
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 12px #22c55e;
+  }
+}
+
+.market-dot-open {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.dashboard-price {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
