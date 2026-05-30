@@ -4,29 +4,96 @@ import type { Route } from "./+types/home";
 export const API_URL = "https://novis-api-development.dappgenie.io";
 export const DEFAULT_USER_ID = "654a1b92b528e35018fe028c";
 
-const useTVFontScale = () => {
-  const [scale, setScale] = useState(1);
+const PRICE_FONT =
+  "'Barlow Condensed', 'Arial Narrow', Manrope, ui-sans-serif, system-ui, sans-serif";
 
-  useEffect(() => {
-    const calculateScale = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      const baseWidth = 1280;
-      const baseHeight = 720;
-      const widthScale = width / baseWidth;
-      const heightScale = height / baseHeight;
-      const newScale = Math.min(widthScale, heightScale);
+const ASSETS = {
+  background: "/background.webp",
+  indiaFlag: "/flag-india.png",
+  londonFlag: "/flag-london.png",
+  uaeFlag: "/flag-uae.png",
+  usaFlag: "/flag-usa.png",
+  fallbackLogo: "/goldenlady-logo.png",
+  goldBar: "/gold-bar.png",
+  silverBar: "/silver-bar.png",
+  showcase: ["/silver-coin.jpg", "/silver-bars.jpg", "/gold-bars.jpg", "/gold-coin.avif"],
+};
 
-      setScale(Math.max(1.02, Math.min(newScale * 1.05, 2)));
-    };
+const FontLoader: React.FC = () => (
+  <style>
+    {`
+      @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap');
 
-    calculateScale();
-    window.addEventListener("resize", calculateScale);
+      .dashboard-price {
+        font-family: ${PRICE_FONT};
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.025em;
+      }
 
-    return () => window.removeEventListener("resize", calculateScale);
-  }, []);
+      .glass-dark {
+        background:
+          linear-gradient(135deg, rgba(10,10,10,0.38), rgba(3,3,3,0.24)),
+          radial-gradient(circle at 18% 0%, rgba(255,255,255,0.10), transparent 34%);
+        border: 1px solid rgba(255,255,255,0.13);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.08),
+          0 16px 42px rgba(0,0,0,0.24);
+        backdrop-filter: blur(5px) saturate(125%);
+      }
 
-  return scale;
+      .glass-row {
+        background: rgba(8, 8, 8, 0.34);
+        border: 1px solid rgba(255,255,255,0.075);
+        backdrop-filter: blur(4px) saturate(120%);
+      }
+
+      .flash-up { animation: flashUp 850ms ease-out; }
+      .flash-down { animation: flashDown 850ms ease-out; }
+
+      @keyframes flashUp {
+        0% { background-color: #22E66B; box-shadow: 0 0 34px rgba(34,230,107,0.65); }
+        100% { background-color: transparent; box-shadow: none; }
+      }
+
+      @keyframes flashDown {
+        0% { background-color: #FF374A; box-shadow: 0 0 34px rgba(255,55,74,0.65); }
+        100% { background-color: transparent; box-shadow: none; }
+      }
+
+      .showcase-frame {
+        pointer-events: none;
+      }
+
+      .showcase-frame img {
+        opacity: 0;
+        animation: metalShowcase 16s infinite;
+      }
+
+      .showcase-frame img:nth-child(1) { animation-delay: 0s; }
+      .showcase-frame img:nth-child(2) { animation-delay: 4s; }
+      .showcase-frame img:nth-child(3) { animation-delay: 8s; }
+      .showcase-frame img:nth-child(4) { animation-delay: 12s; }
+
+      @keyframes metalShowcase {
+        0% { opacity: 0; transform: scale(0.99); }
+        6% { opacity: 1; transform: scale(1); }
+        25% { opacity: 1; transform: scale(1); }
+        31% { opacity: 0; transform: scale(1.01); }
+        100% { opacity: 0; }
+      }
+    `}
+  </style>
+);
+
+const DASHBOARD = {
+  border: "rgba(255,255,255,0.12)",
+  goldBright: "#FFC233",
+  silverBright: "#B9DBF5",
+  text: "#FFFFFF",
+  textMuted: "#A6ADB8",
+  green: "#22E66B",
+  red: "#FF374A",
+  date: "#D9B75F",
 };
 
 interface TvColorScheme {
@@ -39,18 +106,6 @@ interface TvColorScheme {
   metalTableRowTextColor?: string;
   bottomBannerBgColor?: string;
   bottomBannerTextColor?: string;
-  cardGoldOzTitleColor?: string;
-  cardGoldOzBgColor?: string;
-  cardSilverOzBgColor?: string;
-  cardSilverOzTitleColor?: string;
-  goldCardGradientColor1?: string;
-  goldCardGradientColor2?: string;
-  silverCardGradientColor1?: string;
-  silverCardGradientColor2?: string;
-  goldCardBidAskLabelColor?: string;
-  goldCardPriceTextColor?: string;
-  silverCardBidAskLabelColor?: string;
-  silverCardPriceTextColor?: string;
 }
 
 interface RateQuote {
@@ -87,32 +142,11 @@ interface LoginResponse {
   tvColorSchemeEnabled?: boolean;
 }
 
-interface PriceCardProps {
-  rates?: MetalRates | null;
-  loading?: boolean;
-}
-
-const DASHBOARD = {
-  bg: "#080808",
-  panel: "#111111",
-  panelRow: "#141414",
-  panelRowAlt: "#101010",
-  border: "#2a2a2a",
-  gold: "#D4A84B",
-  goldBright: "#E8C872",
-  silver: "#8EB4D4",
-  silverBright: "#A8C8E0",
-  text: "#FFFFFF",
-  textMuted: "#8B8B8B",
-  green: "#22C55E",
-  red: "#EF4444",
-};
-
 const WORLD_CLOCKS = [
-  { country: "UAE", timezone: "Asia/Dubai", flagSrc: "/uae-flag.png", offset: "GST +4" },
-  { country: "INDIA", timezone: "Asia/Kolkata", flagSrc: "/india-flag.png", offset: "IST +5:30" },
-  { country: "UK", timezone: "Europe/London", flagSrc: "/uk-flag.png", offset: "BST +1" },
-  { country: "USA", timezone: "America/New_York", flagSrc: "/us-flag.png", offset: "EDT -4" },
+  { country: "UAE", timezone: "Asia/Dubai", flagSrc: ASSETS.uaeFlag, offset: "GST +4" },
+  { country: "INDIA", timezone: "Asia/Kolkata", flagSrc: ASSETS.indiaFlag, offset: "IST +5:30" },
+  { country: "UK", timezone: "Europe/London", flagSrc: ASSETS.londonFlag, offset: "BST +1" },
+  { country: "USA", timezone: "America/New_York", flagSrc: ASSETS.usaFlag, offset: "EDT -4" },
 ] as const;
 
 const DEFAULT_TV_COLOR_SCHEME: TvColorScheme = {
@@ -125,18 +159,6 @@ const DEFAULT_TV_COLOR_SCHEME: TvColorScheme = {
   metalTableRowTextColor: "#4D4D4D",
   bottomBannerBgColor: "#FFCB84",
   bottomBannerTextColor: "#4D4D4D",
-  cardGoldOzTitleColor: "#C62127",
-  cardGoldOzBgColor: "#FFA62E",
-  cardSilverOzBgColor: "#990C11",
-  cardSilverOzTitleColor: "#FFFFFF",
-  goldCardGradientColor1: "#7F1D1D",
-  goldCardGradientColor2: "#EA580C",
-  silverCardGradientColor1: "#9CA3AF",
-  silverCardGradientColor2: "#E5E7EB",
-  goldCardBidAskLabelColor: "#FDE047",
-  goldCardPriceTextColor: "#FDE047",
-  silverCardBidAskLabelColor: "#1F2937",
-  silverCardPriceTextColor: "#1F2937",
 };
 
 const usePriceDelta = (current: number | undefined): PriceDelta | null => {
@@ -145,7 +167,6 @@ const usePriceDelta = (current: number | undefined): PriceDelta | null => {
 
   useEffect(() => {
     if (current === undefined || Number.isNaN(current)) return;
-
     const prev = prevRef.current;
 
     if (prev !== undefined && prev !== current) {
@@ -163,45 +184,71 @@ const usePriceDelta = (current: number | undefined): PriceDelta | null => {
   return delta;
 };
 
-const isAuthenticated = (): boolean => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("user-id") !== null;
-  }
+const getTodayKey = () =>
+  new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Dubai" });
 
-  return false;
+const useDailyHighLow = (storageKey: string, value: number | undefined) => {
+  const [range, setRange] = useState<{ high?: number; low?: number }>({});
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (value === undefined || Number.isNaN(value)) return;
+
+    const today = getTodayKey();
+    const key = `tv-range:${storageKey}`;
+
+    setRange(() => {
+      let previous: { date?: string; high?: number; low?: number } = {};
+
+      try {
+        previous = JSON.parse(localStorage.getItem(key) || "{}");
+      } catch {
+        previous = {};
+      }
+
+      const next =
+        previous.date === today
+          ? {
+              date: today,
+              high: previous.high === undefined ? value : Math.max(previous.high, value),
+              low: previous.low === undefined ? value : Math.min(previous.low, value),
+            }
+          : { date: today, high: value, low: value };
+
+      localStorage.setItem(key, JSON.stringify(next));
+      return { high: next.high, low: next.low };
+    });
+  }, [storageKey, value]);
+
+  return range;
+};
+
+const isAuthenticated = (): boolean => {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("user-id") !== null;
 };
 
 const getUserId = (): string => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("user-id") || DEFAULT_USER_ID;
-  }
-
-  return DEFAULT_USER_ID;
+  if (typeof window === "undefined") return DEFAULT_USER_ID;
+  return localStorage.getItem("user-id") || DEFAULT_USER_ID;
 };
 
 const getUserData = (): LoginResponse | null => {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("user-data");
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem("user-data");
+  if (!stored) return null;
 
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        return null;
-      }
-    }
+  try {
+    return JSON.parse(stored);
+  } catch (error) {
+    console.error("Error parsing user data:", error);
+    return null;
   }
-
-  return null;
 };
 
 const getCompanyCode = (): string | null => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("company-code");
-  }
-
-  return null;
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("company-code");
 };
 
 const refreshUserData = async (): Promise<boolean> => {
@@ -219,13 +266,8 @@ const refreshUserData = async (): Promise<boolean> => {
 
     const response = await fetch(`${API_URL}/auth/mobile-login`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        companyCode,
-        deviceId,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ companyCode, deviceId }),
     });
 
     if (!response.ok) {
@@ -234,12 +276,12 @@ const refreshUserData = async (): Promise<boolean> => {
     }
 
     const data = await response.json();
-
     localStorage.setItem("user-data", JSON.stringify(data));
     localStorage.setItem("user-id", data.id);
-
-    const tvColorScheme = data.tvColorScheme || DEFAULT_TV_COLOR_SCHEME;
-    localStorage.setItem("tv-color-scheme", JSON.stringify(tvColorScheme));
+    localStorage.setItem(
+      "tv-color-scheme",
+      JSON.stringify(data.tvColorScheme || DEFAULT_TV_COLOR_SCHEME)
+    );
 
     return true;
   } catch (error) {
@@ -254,30 +296,18 @@ const handleLogout = () => {
   localStorage.removeItem("tv-color-scheme");
   localStorage.removeItem("company-code");
   localStorage.removeItem("device-id");
-
   window.location.href = "/login";
 };
 
-const getCompanyLogo = (): string | null => {
-  const userData = getUserData();
-  return userData?.logo || null;
-};
+const getCompanyLogo = (): string => ASSETS.fallbackLogo;
 
-const getCompanyName = (): string => {
-  const userData = getUserData();
-  return userData?.name || "Dfin Technologies";
-};
-
-const getTimeForTimezone = (timezone: string) => {
-  const now = new Date();
-
-  return now.toLocaleTimeString("en-US", {
+const getTimeForTimezone = (timezone: string) =>
+  new Date().toLocaleTimeString("en-US", {
     timeZone: timezone,
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
   });
-};
 
 const useSSE = (apiUrl: string, userId: string) => {
   const [liveRates, setLiveRates] = useState<MetalRates | null>(null);
@@ -289,41 +319,27 @@ const useSSE = (apiUrl: string, userId: string) => {
 
     const sseUrl = `${apiUrl}/rates/live-rate?userId=${userId}`;
 
-    const initializeSSE = () => {
-      try {
-        esRef.current = new EventSource(sseUrl);
-
-        esRef.current.addEventListener("open", () => {
-          console.log("SSE connection opened");
-          setIsConnected(true);
-        });
-
-        esRef.current.addEventListener("message", (event) => {
-          try {
-            const currentRate = JSON.parse(event.data);
-            setLiveRates(currentRate);
-          } catch (error) {
-            console.error("Error parsing SSE message:", error);
-          }
-        });
-
-        esRef.current.addEventListener("error", (error) => {
-          console.error("SSE Error:", error);
-          setIsConnected(false);
-        });
-      } catch (error) {
-        console.error("Failed to initialize SSE:", error);
-      }
-    };
-
-    initializeSSE();
+    try {
+      esRef.current = new EventSource(sseUrl);
+      esRef.current.addEventListener("open", () => setIsConnected(true));
+      esRef.current.addEventListener("message", (event) => {
+        try {
+          setLiveRates(JSON.parse(event.data));
+        } catch (error) {
+          console.error("Error parsing SSE message:", error);
+        }
+      });
+      esRef.current.addEventListener("error", (error) => {
+        console.error("SSE Error:", error);
+        setIsConnected(false);
+      });
+    } catch (error) {
+      console.error("Failed to initialize SSE:", error);
+    }
 
     return () => {
-      if (esRef.current) {
-        esRef.current.close();
-        esRef.current = null;
-      }
-
+      esRef.current?.close();
+      esRef.current = null;
       setIsConnected(false);
     };
   }, [apiUrl, userId]);
@@ -332,390 +348,316 @@ const useSSE = (apiUrl: string, userId: string) => {
 };
 
 const useUAETime = () => {
-  const [time, setTime] = useState(
-    new Date().toLocaleTimeString("en-US", {
-      timeZone: "Asia/Dubai",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    })
-  );
+  const [time, setTime] = useState(getTimeForTimezone("Asia/Dubai"));
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(
-        new Date().toLocaleTimeString("en-US", {
-          timeZone: "Asia/Dubai",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-      );
-    }, 1000);
-
+    const interval = setInterval(() => setTime(getTimeForTimezone("Asia/Dubai")), 1000);
     return () => clearInterval(interval);
   }, []);
 
   return time;
 };
 
-const ShimmerLoader: React.FC<{ className?: string }> = ({ className = "" }) => {
+const PriceLoader: React.FC = () => (
+  <div className="w-24 h-7 bg-gray-500/50 rounded animate-pulse" />
+);
+
+const TopBar: React.FC<{
+  logoSrc: string;
+  currentDate: Date;
+}> = ({ logoSrc, currentDate }) => {
+  const dayName = currentDate
+    .toLocaleDateString("en-US", {
+      timeZone: "Asia/Dubai",
+      weekday: "long",
+    })
+    .toUpperCase();
+
+  const dateText = currentDate
+    .toLocaleDateString("en-US", {
+      timeZone: "Asia/Dubai",
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    })
+    .toUpperCase();
+
   return (
-    <div
-      className={`bg-gradient-to-r from-yellow-600 to-yellow-400 animate-pulse rounded ${className}`}
-    />
+    <header
+      className="relative grid shrink-0 items-start"
+      style={{
+        gridTemplateColumns: "1.28fr 1fr",
+        height: "clamp(11rem, 20vh, 16rem)",
+      }}
+    >
+      <div className="absolute left-0 top-1 flex flex-col items-center">
+        <svg
+          width="26"
+          height="26"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={DASHBOARD.date}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+
+        <div className="mt-1 flex flex-col items-center gap-1">
+          <div
+            className="font-extrabold tracking-[0.1em] whitespace-nowrap"
+            style={{
+              color: DASHBOARD.date,
+              fontSize: "clamp(0.85rem, 1vw, 1.3rem)",
+            }}
+          >
+            {dayName}
+          </div>
+          <div
+            className="font-extrabold tracking-[0.12em] whitespace-nowrap"
+            style={{
+              color: DASHBOARD.date,
+              fontSize: "clamp(0.95rem, 1.1vw, 1.45rem)",
+            }}
+          >
+            {dateText}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-center items-start">
+        <img
+          src={logoSrc}
+          alt="Golden Lady"
+          className="object-contain"
+          style={{
+            width: "clamp(34rem, 42vw, 60rem)",
+            height: "clamp(10.5rem, 20vh, 16rem)",
+          }}
+        />
+      </div>
+
+      <div className="flex justify-end items-start gap-5 pt-6">
+        <MetalShowcase />
+
+        <button
+          onClick={handleLogout}
+          className="text-white/55 hover:text-white p-2 transition-colors cursor-pointer"
+          title="Power Off"
+          type="button"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+            <line x1="12" y1="2" x2="12" y2="12" />
+          </svg>
+        </button>
+      </div>
+    </header>
   );
 };
 
-const PriceLoader: React.FC = () => {
-  return <div className="w-20 h-6 bg-gray-400 rounded animate-pulse" />;
-};
+const MetalShowcase: React.FC = () => (
+  <div
+    className="showcase-frame relative flex items-center justify-center overflow-visible"
+    style={{
+      width: "clamp(20rem, 26vw, 36rem)",
+      height: "clamp(8rem, 14vh, 12rem)",
+    }}
+  >
+    {ASSETS.showcase.map((src) => (
+      <img
+        key={src}
+        src={src}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+    ))}
+  </div>
+);
 
-const HighLowDisplay: React.FC<{
-  high?: number;
-  low?: number;
-  decimals: number;
-  fontScale: number;
-  accentColor: string;
-}> = ({ high, low, decimals, fontScale, accentColor }) => {
-  const formatValue = (value?: number) =>
-    typeof value === "number" && !Number.isNaN(value)
-      ? value.toFixed(decimals)
-      : "--";
+const ClockItem: React.FC<{
+  country: string;
+  timezone: string;
+  flagSrc: string;
+  offset: string;
+}> = ({ country, timezone, flagSrc, offset }) => {
+  const [time, setTime] = useState(getTimeForTimezone(timezone));
+
+  useEffect(() => {
+    const interval = setInterval(() => setTime(getTimeForTimezone(timezone)), 1000);
+    return () => clearInterval(interval);
+  }, [timezone]);
 
   return (
-    <div
-      className="flex items-center justify-center gap-6 mt-3 font-bold uppercase tracking-wide"
-      style={{ fontSize: `${0.82 * fontScale}rem` }}
-    >
-      <span style={{ color: DASHBOARD.textMuted }}>
-        HIGH{" "}
-        <span style={{ color: accentColor }}>
-          {formatValue(high)}
-        </span>
-      </span>
+    <div className="flex items-center justify-center gap-2 min-w-0">
+      <img
+        src={flagSrc}
+        alt={country}
+        className="shrink-0 object-contain"
+        style={{ width: "clamp(1.8rem, 2.2vw, 2.65rem)", height: "auto" }}
+      />
 
-      <span style={{ color: DASHBOARD.textMuted }}>
-        LOW{" "}
-        <span style={{ color: accentColor }}>
-          {formatValue(low)}
-        </span>
-      </span>
+      <div className="leading-none min-w-0">
+        <div
+          className="font-extrabold uppercase tracking-wide"
+          style={{ color: "#70E6F5", fontSize: "clamp(0.68rem, 0.74vw, 0.95rem)" }}
+        >
+          {country}
+        </div>
+
+        <div
+          className="mt-1 font-extrabold text-white dashboard-price whitespace-nowrap"
+          style={{ fontSize: "clamp(0.9rem, 0.96vw, 1.22rem)" }}
+        >
+          {time}
+        </div>
+
+        <div
+          className="mt-1 text-white/55 uppercase"
+          style={{ fontSize: "clamp(0.48rem, 0.52vw, 0.68rem)" }}
+        >
+          {offset}
+        </div>
+      </div>
     </div>
   );
 };
 
-const TableChangeCell: React.FC<{
-  bid: number | undefined;
-  fontScale: number;
-}> = ({ bid, fontScale }) => {
-  const delta = usePriceDelta(bid);
-  const isUp = !delta || delta.direction === "up";
-  const color = isUp ? DASHBOARD.green : DASHBOARD.red;
-  const percent = delta ? Math.abs(delta.percent) : 0;
-
-  return (
-    <span
-      className="font-semibold whitespace-nowrap"
-      style={{ color, fontSize: `${1 * fontScale}rem` }}
-    >
-      {isUp ? "▲" : "▼"} {percent.toFixed(2)}%
-    </span>
-  );
-};
-
-const SpotPriceColumn: React.FC<{
-  label: string;
-  price: number | undefined;
-  loading: boolean;
-  decimals: number;
-  labelColor: string;
-  priceColor: string;
-  dividerColor: string;
-  high?: number;
-  low?: number;
-  showDivider?: boolean;
-}> = ({
-  label,
-  price,
-  loading,
-  decimals,
-  labelColor,
-  priceColor,
-  dividerColor,
-  high,
-  low,
-  showDivider = false,
-}) => {
-  const fontScale = useTVFontScale();
-
-  return (
-    <>
-      {showDivider && (
-        <div
-          className="w-px self-stretch opacity-60"
-          style={{ backgroundColor: dividerColor }}
-        />
-      )}
-
-      <div className="flex-1 flex flex-col items-center justify-center py-2">
-        <span
-          className="font-bold mb-2 tracking-widest"
-          style={{ color: labelColor, fontSize: `${0.95 * fontScale}rem` }}
-        >
-          {label}
-        </span>
-
-        {!loading && price !== undefined ? (
-          <>
-            <span
-              className="font-extrabold dashboard-price"
-              style={{
-                color: priceColor,
-                fontSize: `${2.4 * fontScale}rem`,
-                lineHeight: 1,
-              }}
-            >
-              {price.toFixed(decimals)}
-            </span>
-
-            <HighLowDisplay
-              high={high}
-              low={low}
-              decimals={decimals}
-              fontScale={fontScale}
-              accentColor={priceColor}
-            />
-          </>
-        ) : (
-          <ShimmerLoader className="w-32 h-12 mt-1" />
-        )}
-      </div>
-    </>
-  );
-};
+const ClockStrip: React.FC = () => (
+  <div
+    className="grid grid-cols-4 items-center rounded-lg px-4 py-2 glass-dark"
+    style={{ minHeight: "clamp(3.65rem, 6.4vh, 4.7rem)" }}
+  >
+    {WORLD_CLOCKS.map((clock) => (
+      <ClockItem key={clock.country} {...clock} />
+    ))}
+  </div>
+);
 
 const MetalSpotCard: React.FC<{
   metal: "gold" | "silver";
-  rates: MetalRates | null;
+  quote?: RateQuote;
   loading: boolean;
-}> = ({ metal, rates, loading }) => {
-  const fontScale = useTVFontScale();
+}> = ({ metal, quote, loading }) => {
   const isGold = metal === "gold";
-
-  const quote = isGold ? rates?.ouncePriceUsd : rates?.silverOuncePriceUsd;
-
-  const bid = quote?.bid;
-  const ask = quote?.ask;
-  const high = quote?.dayHigh ?? quote?.high;
-  const low = quote?.dayLow ?? quote?.low;
-
   const decimals = isGold ? 2 : 3;
-  const accent = isGold ? DASHBOARD.gold : DASHBOARD.silver;
-  const priceColor = isGold ? DASHBOARD.goldBright : DASHBOARD.silverBright;
-  const labelColor = isGold ? DASHBOARD.gold : DASHBOARD.silver;
+  const tracked = useDailyHighLow(`${metal}-spot`, quote?.bid);
+  const bidDelta = usePriceDelta(quote?.bid);
+  const askDelta = usePriceDelta(quote?.ask);
+
+  const high = quote?.dayHigh ?? quote?.high ?? tracked.high;
+  const low = quote?.dayLow ?? quote?.low ?? tracked.low;
+  const accent = isGold ? DASHBOARD.goldBright : DASHBOARD.silverBright;
+  const label = isGold ? "GOLD OZ" : "SILVER OZ";
+  const imageSrc = isGold ? ASSETS.goldBar : ASSETS.silverBar;
+
+  const bidFlashClass =
+    bidDelta?.direction === "up"
+      ? "flash-up"
+      : bidDelta?.direction === "down"
+        ? "flash-down"
+        : "";
+
+  const askFlashClass =
+    askDelta?.direction === "up"
+      ? "flash-up"
+      : askDelta?.direction === "down"
+        ? "flash-down"
+        : "";
+
+  const formatHighLow = (value: number | undefined) =>
+    typeof value === "number" && !Number.isNaN(value) ? value.toFixed(decimals) : "--";
 
   return (
-    <div
-      className="flex-1 flex flex-col h-full border-r last:border-r-0"
-      style={{
-        borderColor: DASHBOARD.border,
-        background: "linear-gradient(180deg, #121212 0%, #0a0a0a 100%)",
-      }}
-    >
-      <div
-        className="flex items-center gap-3 px-6 py-3 border-b"
-        style={{ borderColor: DASHBOARD.border }}
-      >
+    <section className="glass-dark rounded-2xl px-5 py-3">
+      <div className="flex items-center gap-3 mb-1.5">
         <img
-          src={isGold ? "/gold-bar.png" : "/silver-bar.png"}
-          alt={isGold ? "Gold" : "Silver"}
-          className="object-contain"
-          style={{ width: "clamp(2.5rem, 5vw, 4rem)", height: "auto" }}
+          src={imageSrc}
+          alt={label}
+          className="object-contain shrink-0"
+          style={{ width: "clamp(2rem, 2.55vw, 3.25rem)", height: "auto" }}
         />
-
-        <span
-          className="font-bold tracking-widest"
-          style={{ color: accent, fontSize: `${1.15 * fontScale}rem` }}
+        <div
+          className="font-extrabold tracking-[0.12em]"
+          style={{ color: accent, fontSize: "clamp(1.1rem, 1.18vw, 1.62rem)" }}
         >
-          {isGold ? "GOLD OZ" : "SILVER OZ"}
-        </span>
+          {label}
+        </div>
       </div>
 
-      <div className="flex flex-1 items-stretch px-4">
-        <SpotPriceColumn
-          label="BID"
-          price={bid}
-          loading={loading}
-          decimals={decimals}
-          labelColor={labelColor}
-          priceColor={priceColor}
-          dividerColor={accent}
-          high={high}
-          low={low}
-        />
+      <div className="grid items-start gap-5" style={{ gridTemplateColumns: "1fr 1fr" }}>
+        {(["BID", "ASK"] as const).map((side) => {
+          const price = side === "BID" ? quote?.bid : quote?.ask;
+          const flashClass = side === "BID" ? bidFlashClass : askFlashClass;
+          const hlValue = side === "BID" ? high : low;
+          const hlLabel = side === "BID" ? "HIGH" : "LOW";
 
-        <SpotPriceColumn
-          label="ASK"
-          price={ask}
-          loading={loading}
-          decimals={decimals}
-          labelColor={labelColor}
-          priceColor={priceColor}
-          dividerColor={accent}
-          high={high}
-          low={low}
-          showDivider
-        />
+          return (
+            <div key={side} className="min-w-0 text-center">
+              <div
+                className="font-extrabold tracking-[0.22em]"
+                style={{ color: "#ccd8ff", fontSize: "clamp(0.68rem, 0.72vw, 0.92rem)" }}
+              >
+                {side}
+              </div>
+
+              <div className={`mt-1 min-w-0 rounded-lg px-2 py-0.5 transition-colors ${flashClass}`}>
+                {loading || price === undefined ? (
+                  <PriceLoader />
+                ) : (
+                  <span
+                    className="dashboard-price font-extrabold whitespace-nowrap"
+                    style={{
+                      color: accent,
+                      fontSize: "clamp(2.3rem, 2.65vw, 3.55rem)",
+                      lineHeight: 0.95,
+                    }}
+                  >
+                    {price.toFixed(decimals)}
+                  </span>
+                )}
+              </div>
+
+              <div
+                className="mt-1 font-extrabold uppercase"
+                style={{
+                  color: DASHBOARD.textMuted,
+                  fontSize: "clamp(0.82rem, 0.9vw, 1.1rem)",
+                }}
+              >
+                {hlLabel}{" "}
+                <span 
+                  className="dashboard-price"
+                  style={{ color: accent, fontSize: "clamp(1rem, 1.1vw, 1.4rem)" }}
+                >
+                  {formatHighLow(hlValue)}
+                  </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
-    </div>
+    </section>
   );
 };
 
-const SpotPricesRow: React.FC<PriceCardProps> = ({
-  rates = null,
-  loading = false,
-}) => (
-  <section
-    className="flex w-full shrink-0 border-b"
-    style={{ borderColor: DASHBOARD.border, minHeight: "26vh" }}
-  >
-    <MetalSpotCard metal="gold" rates={rates} loading={loading} />
-    <MetalSpotCard metal="silver" rates={rates} loading={loading} />
-  </section>
-);
-
-const MarketStatusBadge: React.FC<{ isOpen: boolean; fontScale?: number }> = ({
-  isOpen,
-  fontScale = 1,
-}) => (
-  <div className="flex items-center gap-2">
-    <span
-      className={`w-2 h-2 rounded-full ${
-        isOpen ? "market-dot-open bg-green-500" : "bg-red-500"
-      }`}
-    />
-
-    <span
-      className="font-bold tracking-widest uppercase"
-      style={{
-        color: isOpen ? DASHBOARD.green : DASHBOARD.red,
-        fontSize: `${0.7 * fontScale}rem`,
-      }}
-    >
+const MarketStatusBadge: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
+  <div className="flex items-center justify-center gap-2 font-extrabold tracking-widest">
+    <span className={`w-2.5 h-2.5 rounded-full ${isOpen ? "bg-green-400" : "bg-red-500"}`} />
+    <span style={{ color: isOpen ? DASHBOARD.green : DASHBOARD.red }}>
       MARKET {isOpen ? "OPEN" : "CLOSED"}
     </span>
   </div>
 );
 
-const HeaderClock: React.FC<{
-  country: string;
-  timezone: string;
-  offset: string;
-  fontScale: number;
-}> = ({ country, timezone, offset, fontScale }) => {
-  const [time, setTime] = useState(getTimeForTimezone(timezone));
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(getTimeForTimezone(timezone));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timezone]);
-
-  return (
-    <div className="flex flex-col leading-none min-w-[5rem]">
-      <span
-        className="font-bold uppercase tracking-wide"
-        style={{ color: DASHBOARD.gold, fontSize: `${0.65 * fontScale}rem` }}
-      >
-        {country}
-      </span>
-
-      <span
-        className="font-bold uppercase whitespace-nowrap"
-        style={{ color: DASHBOARD.text, fontSize: `${0.9 * fontScale}rem` }}
-      >
-        {time}
-      </span>
-
-      <span
-        className="uppercase whitespace-nowrap"
-        style={{ color: DASHBOARD.textMuted, fontSize: `${0.55 * fontScale}rem` }}
-      >
-        {offset}
-      </span>
-    </div>
-  );
-};
-
-const MetalTableHeader: React.FC<{
-  currentDate: Date;
-  isMarketOpen: boolean;
-}> = ({ currentDate, isMarketOpen }) => {
-  const fontScale = useTVFontScale();
-
-  const dateStr = currentDate
-    .toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })
-    .replace(/ /g, " ")
-    .toUpperCase();
-
-  return (
-    <div
-      className="flex items-center justify-between gap-4 px-5 py-3 border-b shrink-0"
-      style={{ borderColor: DASHBOARD.border, backgroundColor: "#0d0d0d" }}
-    >
-      <div className="flex items-center gap-5 min-w-0 overflow-hidden">
-        {WORLD_CLOCKS.map((clock) => (
-          <HeaderClock
-            key={clock.country}
-            country={clock.country}
-            timezone={clock.timezone}
-            offset={clock.offset}
-            fontScale={fontScale}
-          />
-        ))}
-      </div>
-
-      <div className="flex items-center gap-4 shrink-0">
-        <span
-          className="font-bold uppercase tracking-wide"
-          style={{ color: DASHBOARD.gold, fontSize: `${0.95 * fontScale}rem` }}
-        >
-          {dateStr}
-        </span>
-
-        <div
-          className="w-px h-6 opacity-40"
-          style={{ backgroundColor: DASHBOARD.gold }}
-        />
-
-        <MarketStatusBadge isOpen={isMarketOpen} fontScale={fontScale} />
-      </div>
-
-      <span
-        className="font-medium uppercase tracking-wide shrink-0"
-        style={{ color: DASHBOARD.textMuted, fontSize: `${0.65 * fontScale}rem` }}
-      >
-        PRICES IN AED
-      </span>
-    </div>
-  );
-};
-
 const DataTable: React.FC<{
   rates: MetalRates | null;
   loading: boolean;
-  currentDate: Date;
-  isMarketOpen: boolean;
-}> = ({ rates, loading, currentDate, isMarketOpen }) => {
-  const fontScale = useTVFontScale();
-
+}> = ({ rates, loading }) => {
   const tableData = [
     { key: "gramNineOneSix", label: "GRAM", weight: "1GM", purity: "22K" },
     { key: "gramPrice", label: "GRAM", weight: "1GM", purity: "24K" },
@@ -731,200 +673,108 @@ const DataTable: React.FC<{
     });
 
   return (
-    <div
-      className="h-full flex flex-col flex-1 min-w-0 border rounded-lg overflow-hidden"
-      style={{ backgroundColor: DASHBOARD.panel, borderColor: DASHBOARD.border }}
-    >
-      <MetalTableHeader
-        currentDate={currentDate}
-        isMarketOpen={isMarketOpen}
-      />
-
+    <section className="min-w-0 h-full flex flex-col">
       <div
-        className="grid gap-2 text-center w-full px-4 py-2 border-b shrink-0"
+        className="grid gap-2 text-center rounded-lg px-5 py-2.5 font-extrabold"
         style={{
-          gridTemplateColumns: "1.4fr 0.8fr 1.2fr 1.2fr 0.9fr",
-          borderColor: DASHBOARD.border,
+          gridTemplateColumns: "1.4fr 0.8fr 1.2fr 1.2fr",
+          background:
+            "linear-gradient(90deg, rgba(211,168,59,0.74) 0%, rgba(248,231,138,0.68) 100%)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          backdropFilter: "blur(5px)",
+          color: "#050505",
+          fontSize: "clamp(0.9rem, 0.95vw, 1.25rem)",
         }}
       >
-        {["METAL", "WEIGHT", "BID (AED)", "ASK (AED)", "CHANGE"].map(
-          (header) => (
-            <div
-              key={header}
-              className="font-bold uppercase tracking-wide"
-              style={{ color: DASHBOARD.gold, fontSize: `${0.85 * fontScale}rem` }}
-            >
-              {header}
-            </div>
-          )
-        )}
+        {["METAL", "WEIGHT", "BID (AED)", "ASK (AED)"].map((header) => (
+          <div key={header}>{header}</div>
+        ))}
       </div>
 
-      <div className="flex flex-col flex-1">
-        {tableData.map((item, index) => {
-          const rateData = rates?.[item.key as keyof MetalRates] as
-            | RateQuote
-            | undefined;
-
-          const rowBg =
-            index % 2 === 0 ? DASHBOARD.panelRow : DASHBOARD.panelRowAlt;
+      <div className="mt-2.5 flex flex-col gap-2 flex-1 min-h-0">
+        {tableData.map((item) => {
+          const rateData = rates?.[item.key as keyof MetalRates] as RateQuote | undefined;
 
           return (
             <div
               key={item.key}
-              className="grid gap-2 text-center items-center px-4 border-b last:border-b-0 flex-1"
+              className="glass-row grid gap-2 text-center items-center rounded-lg px-5 py-2 font-extrabold flex-1"
               style={{
-                gridTemplateColumns: "1.4fr 0.8fr 1.2fr 1.2fr 0.9fr",
-                backgroundColor: rowBg,
-                borderColor: DASHBOARD.border,
+                gridTemplateColumns: "1.4fr 0.8fr 1.2fr 1.2fr",
+                minHeight: 0,
+                color: DASHBOARD.text,
+                fontSize: "clamp(0.98rem, 1vw, 1.4rem)",
               }}
             >
-              <div
-                className="font-bold text-left pl-2"
-                style={{ color: DASHBOARD.text, fontSize: `${1 * fontScale}rem` }}
-              >
+              <div className="text-left">
                 {item.label}
-
                 {item.purity && (
-                  <span className="ml-2 font-bold" style={{ color: DASHBOARD.gold }}>
+                  <span className="ml-2" style={{ color: DASHBOARD.goldBright }}>
                     {item.purity}
                   </span>
                 )}
               </div>
 
-              <div
-                style={{
-                  color: DASHBOARD.textMuted,
-                  fontSize: `${0.95 * fontScale}rem`,
-                }}
-              >
-                {item.weight}
-              </div>
+              <div style={{ color: DASHBOARD.textMuted }}>{item.weight}</div>
 
-              <div
-                className="font-bold dashboard-price"
-                style={{ color: DASHBOARD.gold, fontSize: `${1.05 * fontScale}rem` }}
-              >
+              <div className="dashboard-price" style={{ color: DASHBOARD.goldBright }}>
                 {!loading && rateData ? formatPrice(rateData.bid) : <PriceLoader />}
               </div>
 
-              <div
-                className="font-bold dashboard-price"
-                style={{ color: DASHBOARD.gold, fontSize: `${1.05 * fontScale}rem` }}
-              >
+              <div className="dashboard-price" style={{ color: DASHBOARD.goldBright }}>
                 {!loading && rateData ? formatPrice(rateData.ask) : <PriceLoader />}
-              </div>
-
-              <div>
-                {!loading && rateData ? (
-                  <TableChangeCell bid={rateData.bid} fontScale={fontScale} />
-                ) : (
-                  <PriceLoader />
-                )}
               </div>
             </div>
           );
         })}
       </div>
-    </div>
-  );
-};
-
-const LogoPanel: React.FC<{ logoSrc: string }> = ({ logoSrc }) => {
-  const fontScale = useTVFontScale();
-
-  return (
-    <aside
-      className="h-full flex flex-col items-center justify-center border rounded-lg overflow-hidden shrink-0 px-8"
-      style={{
-        width: "28%",
-        borderColor: DASHBOARD.border,
-        background:
-          "radial-gradient(circle at 50% 35%, #1a1a1a 0%, #101010 48%, #080808 100%)",
-      }}
-    >
-      <img
-        src={logoSrc}
-        alt={getCompanyName()}
-        className="w-full object-contain"
-        style={{
-          maxHeight: "62%",
-          maxWidth: "90%",
-        }}
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-
-          if (!target.src.includes("dfin-logo")) {
-            target.src = "/dfin-logo.png";
-          }
-        }}
-      />
-
-      <div
-        className="mt-6 text-center font-bold uppercase tracking-widest"
-        style={{
-          color: DASHBOARD.text,
-          fontSize: `${1.05 * fontScale}rem`,
-        }}
-      >
-        {getCompanyName()}
-      </div>
-    </aside>
+    </section>
   );
 };
 
 const DashboardFooter: React.FC<{ time: string }> = ({ time }) => {
-  const newsText =
-    "Global markets steady as investors await key economic data this week...";
+  const newsText = "Global markets steady as investors await key economic data...";
 
   return (
     <footer
-      className="flex items-center gap-4 px-6 py-3 border-t shrink-0"
+      className="flex items-center gap-4 px-6 py-1.5 border-t shrink-0"
       style={{
         borderColor: DASHBOARD.border,
-        backgroundColor: DASHBOARD.bg,
-        minHeight: "7vh",
+        backgroundColor: "rgba(0, 0, 0, 0.72)",
+        minHeight: "4.8vh",
       }}
     >
-      <div
-        className="flex items-center gap-2 shrink-0"
-        style={{ maxWidth: "38%" }}
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={DASHBOARD.textMuted}
-          strokeWidth="2"
-          className="shrink-0"
-        >
+      <div className="flex items-center gap-2 shrink-0" style={{ maxWidth: "34%" }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={DASHBOARD.textMuted} strokeWidth="2">
           <circle cx="12" cy="12" r="10" />
           <line x1="12" y1="16" x2="12" y2="12" />
           <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
-
-        <span className="text-white text-sm leading-snug">
+        <span className="text-white leading-snug" style={{ fontSize: "clamp(0.7rem, 0.78vw, 0.95rem)" }}>
           The price shown is indicative. Please contact us for booking.
         </span>
       </div>
 
-      <div
-        className="w-px self-stretch shrink-0 opacity-40"
-        style={{ backgroundColor: DASHBOARD.border }}
-      />
+      <div className="w-px self-stretch shrink-0 opacity-40" style={{ backgroundColor: DASHBOARD.border }} />
 
       <div className="flex-1 flex items-center overflow-hidden min-w-0 gap-2">
-        <span className="font-bold shrink-0" style={{ color: DASHBOARD.gold }}>
+        <span
+          className="font-bold shrink-0"
+          style={{ color: DASHBOARD.goldBright, fontSize: "clamp(0.78rem, 0.82vw, 1rem)" }}
+        >
           GOLD NEWS:
         </span>
-
-        <span className="text-white text-sm truncate">{newsText}</span>
+        <span
+          className="text-white truncate"
+          style={{ fontSize: "clamp(0.7rem, 0.78vw, 0.95rem)" }}
+        >
+          {newsText}
+        </span>
       </div>
 
       <span
-        className="font-bold shrink-0 uppercase"
-        style={{ color: DASHBOARD.gold, fontSize: "1rem" }}
+        className="font-bold shrink-0 uppercase dashboard-price"
+        style={{ color: DASHBOARD.goldBright, fontSize: "clamp(0.8rem, 0.9vw, 1.1rem)" }}
       >
         {time}
       </span>
@@ -935,10 +785,7 @@ const DashboardFooter: React.FC<{ time: string }> = ({ time }) => {
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Live Gold & Silver Prices" },
-    {
-      name: "description",
-      content: "Real-time gold and silver price tracking",
-    },
+    { name: "description", content: "Real-time gold and silver price tracking" },
   ];
 }
 
@@ -970,49 +817,78 @@ const AuthenticatedHome: React.FC = () => {
     }
   }, [liveRates]);
 
-  const logoSrc = isClient ? getCompanyLogo() || "/dfin-logo.png" : "/dfin-logo.png";
+  const logoSrc = isClient ? getCompanyLogo() || ASSETS.fallbackLogo : ASSETS.fallbackLogo;
 
   return (
     <div
-      className="flex flex-col h-screen w-screen text-white relative overflow-hidden"
+      className="relative flex flex-col h-screen w-screen text-white overflow-hidden"
       style={{
         fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif",
-        backgroundColor: DASHBOARD.bg,
+        backgroundColor: "#080808",
       }}
     >
-      <button
-        onClick={handleLogout}
-        className="absolute top-2 right-3 z-50 text-white/50 hover:text-white p-2 transition-colors cursor-pointer"
-        title="Power Off"
-        type="button"
-      >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
-          <line x1="12" y1="2" x2="12" y2="12" />
-        </svg>
-      </button>
+      <FontLoader />
 
-      <SpotPricesRow rates={liveRates} loading={isLoading} />
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0.42), rgba(0,0,0,0.18)), url(${ASSETS.background})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          opacity: 1,
+          filter: "contrast(1.16) brightness(1.18) saturate(1.18)",
+        }}
+      />
 
-      <main className="flex flex-1 w-full overflow-hidden min-h-0 px-4 py-3 gap-4">
-        <DataTable
-          rates={liveRates}
-          loading={isLoading}
-          currentDate={currentDate}
-          isMarketOpen={!isMarketClosed}
-        />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 35% 18%, rgba(35, 160, 190, 0.12), transparent 34%), linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.22))",
+        }}
+      />
 
-        <LogoPanel logoSrc={logoSrc} />
-      </main>
+      <div className="relative z-10 flex flex-col h-full">
+        <div className="flex-1 min-h-0 px-8 pt-3 pb-3">
+          <TopBar logoSrc={logoSrc} currentDate={currentDate} />
 
-      <DashboardFooter time={uaeTime} />
+          <main
+            className="grid gap-5 min-h-0"
+            style={{
+              gridTemplateColumns: "1.28fr 1fr",
+              height: "calc(100% - clamp(11rem, 20vh, 16rem))",
+              marginTop: "clamp(0.3rem, 0.8vh, 0.75rem)",
+              paddingBottom: "1.25rem",
+            }}
+          >
+            <DataTable rates={liveRates} loading={isLoading} />
+
+            <div className="min-w-0 h-full flex flex-col gap-3">
+              <ClockStrip />
+
+              <div className="flex flex-col gap-3 min-h-0">
+                <MetalSpotCard
+                  metal="gold"
+                  quote={liveRates?.ouncePriceUsd}
+                  loading={isLoading}
+                />
+
+                <MetalSpotCard
+                  metal="silver"
+                  quote={liveRates?.silverOuncePriceUsd}
+                  loading={isLoading}
+                />
+
+                <section className="glass-dark rounded-2xl px-6 py-3">
+                  <MarketStatusBadge isOpen={!isMarketClosed} />
+                </section>
+              </div>
+            </div>
+          </main>
+        </div>
+
+        <DashboardFooter time={uaeTime} />
+      </div>
     </div>
   );
 };
@@ -1040,23 +916,10 @@ const Home: React.FC = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: DASHBOARD.bg }}
+        style={{ backgroundColor: "#080808" }}
       >
-        <div className="text-center">
-          {isClient && getCompanyLogo() && (
-            <img
-              src={getCompanyLogo()!}
-              alt={getCompanyName()}
-              className="h-16 w-auto mx-auto mb-4 object-contain"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = "none";
-              }}
-            />
-          )}
-
-          <div className="text-white text-lg">Loading...</div>
-        </div>
+        <FontLoader />
+        <div className="text-white text-lg">Loading...</div>
       </div>
     );
   }
