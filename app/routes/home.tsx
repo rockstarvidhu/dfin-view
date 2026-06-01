@@ -387,13 +387,13 @@ const TopBar: React.FC<{
       className="relative grid shrink-0 items-start"
       style={{
         gridTemplateColumns: "1.28fr 1fr",
-        height: "clamp(11rem, 20vh, 16rem)",
+        height: "clamp(9rem, 16.5vh, 13rem)",
       }}
     >
-      <div className="absolute left-0 top-1 flex flex-col items-center">
+      <div className="absolute left-0 flex flex-col items-center" style={{ top: "clamp(1.4rem, 3.2vh, 3rem)" }}>
         <svg
-          width="26"
-          height="26"
+          width="34"
+          height="34"
           viewBox="0 0 24 24"
           fill="none"
           stroke={DASHBOARD.date}
@@ -412,7 +412,7 @@ const TopBar: React.FC<{
             className="font-extrabold tracking-[0.1em] whitespace-nowrap"
             style={{
               color: DASHBOARD.date,
-              fontSize: "clamp(0.85rem, 1vw, 1.3rem)",
+              fontSize: "clamp(1rem, 1.25vw, 1.65rem)",
             }}
           >
             {dayName}
@@ -421,7 +421,7 @@ const TopBar: React.FC<{
             className="font-extrabold tracking-[0.12em] whitespace-nowrap"
             style={{
               color: DASHBOARD.date,
-              fontSize: "clamp(0.95rem, 1.1vw, 1.45rem)",
+              fontSize: "clamp(1.15rem, 1.45vw, 1.9rem)",
             }}
           >
             {dateText}
@@ -435,18 +435,18 @@ const TopBar: React.FC<{
           alt="Golden Lady"
           className="object-contain"
           style={{
-            width: "clamp(34rem, 42vw, 60rem)",
-            height: "clamp(10.5rem, 20vh, 16rem)",
+            width: "clamp(31rem, 39vw, 56rem)",
+            height: "clamp(8.8rem, 16vh, 13rem)",
           }}
         />
       </div>
 
-      <div className="flex justify-end items-start gap-5 pt-6">
+      <div className="relative flex justify-center items-start pt-4">
         <MetalShowcase />
 
         <button
           onClick={handleLogout}
-          className="text-white/55 hover:text-white p-2 transition-colors cursor-pointer"
+          className="absolute right-0 top-4 text-white/55 hover:text-white p-2 transition-colors cursor-pointer"
           title="Power Off"
           type="button"
         >
@@ -573,17 +573,20 @@ const MetalSpotCard: React.FC<{
     typeof value === "number" && !Number.isNaN(value) ? value.toFixed(decimals) : "--";
 
   return (
-    <section className="glass-dark rounded-2xl px-5 py-3">
+    <section
+      className="glass-dark rounded-2xl px-7 py-5"
+      style={{ minHeight: "clamp(9.2rem, 17vh, 13.5rem)" }}
+    >
       <div className="flex items-center gap-3 mb-1.5">
         <img
           src={imageSrc}
           alt={label}
           className="object-contain shrink-0"
-          style={{ width: "clamp(2rem, 2.55vw, 3.25rem)", height: "auto" }}
+          style={{ width: "clamp(2.7rem, 3.35vw, 4.3rem)", height: "auto" }}
         />
         <div
           className="font-extrabold tracking-[0.12em]"
-          style={{ color: accent, fontSize: "clamp(1.1rem, 1.18vw, 1.62rem)" }}
+          style={{ color: accent, fontSize: "clamp(1.4rem, 1.55vw, 2.1rem)" }}
         >
           {label}
         </div>
@@ -600,7 +603,7 @@ const MetalSpotCard: React.FC<{
             <div key={side} className="min-w-0 text-center">
               <div
                 className="font-extrabold tracking-[0.22em]"
-                style={{ color: "#ccd8ff", fontSize: "clamp(0.68rem, 0.72vw, 0.92rem)" }}
+                style={{ color: "#ccd8ff", fontSize: "clamp(0.85rem, 0.95vw, 1.22rem)" }}
               >
                 {side}
               </div>
@@ -613,8 +616,8 @@ const MetalSpotCard: React.FC<{
                     className="dashboard-price font-extrabold whitespace-nowrap"
                     style={{
                       color: accent,
-                      fontSize: "clamp(2.3rem, 2.65vw, 3.55rem)",
-                      lineHeight: 0.95,
+                      fontSize: "clamp(3.25rem, 3.7vw, 5rem)",
+                      lineHeight: 0.92,
                     }}
                   >
                     {price.toFixed(decimals)}
@@ -626,13 +629,13 @@ const MetalSpotCard: React.FC<{
                 className="mt-1 font-extrabold uppercase"
                 style={{
                   color: DASHBOARD.textMuted,
-                  fontSize: "clamp(0.82rem, 0.9vw, 1.1rem)",
+                  fontSize: "clamp(0.95rem, 1.05vw, 1.35rem)",
                 }}
               >
                 {hlLabel}{" "}
                 <span 
                   className="dashboard-price"
-                  style={{ color: accent, fontSize: "clamp(1rem, 1.1vw, 1.4rem)" }}
+                  style={{ color: accent, fontSize: "clamp(1.18rem, 1.3vw, 1.7rem)" }}
                 >
                   {formatHighLow(hlValue)}
                   </span>
@@ -659,11 +662,11 @@ const DataTable: React.FC<{
   loading: boolean;
 }> = ({ rates, loading }) => {
   const tableData = [
-    { key: "gramNineOneSix", label: "GRAM", weight: "1GM", purity: "22K" },
-    { key: "gramPrice", label: "GRAM", weight: "1GM", purity: "24K" },
-    { key: "ttbPrice", label: "TTB", weight: "1Ttb", purity: "" },
-    { key: "nineNineFive", label: "995", weight: "1 Kg", purity: "" },
-    { key: "tripleNinePointFive", label: "999.9", weight: "1 Kg", purity: "" },
+    { key: "gramNineOneSix", label: "GOLD GRAM", weight: "1GM", purity: "22K" },
+    { key: "gramPrice", label: "GOLD GRAM", weight: "1GM", purity: "24K" },
+    { key: "ttbPrice", label: "GOLD TTB", weight: "1Ttb", purity: "" },
+    { key: "nineNineFive", label: "GOLD 995", weight: "1 Kg", purity: "" },
+    { key: "tripleNinePointFive", label: "GOLD 999.9", weight: "1 Kg", purity: "" },
   ];
 
   const formatPrice = (n: number) =>
@@ -675,7 +678,7 @@ const DataTable: React.FC<{
   return (
     <section className="min-w-0 h-full flex flex-col">
       <div
-        className="grid gap-2 text-center rounded-lg px-5 py-2.5 font-extrabold"
+        className="grid gap-2 text-center rounded-lg px-4 py-2 font-extrabold"
         style={{
           gridTemplateColumns: "1.4fr 0.8fr 1.2fr 1.2fr",
           background:
@@ -683,7 +686,7 @@ const DataTable: React.FC<{
           border: "1px solid rgba(255,255,255,0.12)",
           backdropFilter: "blur(5px)",
           color: "#050505",
-          fontSize: "clamp(0.9rem, 0.95vw, 1.25rem)",
+          fontSize: "clamp(1.15rem, 1.25vw, 1.65rem)",
         }}
       >
         {["METAL", "WEIGHT", "BID (AED)", "ASK (AED)"].map((header) => (
@@ -691,19 +694,19 @@ const DataTable: React.FC<{
         ))}
       </div>
 
-      <div className="mt-2.5 flex flex-col gap-2 flex-1 min-h-0">
+      <div className="mt-2 flex flex-col gap-2 flex-1 min-h-0">
         {tableData.map((item) => {
           const rateData = rates?.[item.key as keyof MetalRates] as RateQuote | undefined;
 
           return (
             <div
               key={item.key}
-              className="glass-row grid gap-2 text-center items-center rounded-lg px-5 py-2 font-extrabold flex-1"
+              className="glass-row grid gap-2 text-center items-center rounded-lg px-4 py-1.5 font-extrabold flex-1"
               style={{
                 gridTemplateColumns: "1.4fr 0.8fr 1.2fr 1.2fr",
                 minHeight: 0,
                 color: DASHBOARD.text,
-                fontSize: "clamp(0.98rem, 1vw, 1.4rem)",
+                fontSize: "clamp(1.45rem, 1.65vw, 2.25rem)",
               }}
             >
               <div className="text-left">
@@ -717,11 +720,25 @@ const DataTable: React.FC<{
 
               <div style={{ color: DASHBOARD.textMuted }}>{item.weight}</div>
 
-              <div className="dashboard-price" style={{ color: DASHBOARD.goldBright }}>
+              <div
+                className="dashboard-price"
+                style={{
+                  color: DASHBOARD.goldBright,
+                  fontSize: "clamp(1.65rem, 1.9vw, 2.55rem)",
+                  lineHeight: 1,
+                }}
+              >
                 {!loading && rateData ? formatPrice(rateData.bid) : <PriceLoader />}
               </div>
 
-              <div className="dashboard-price" style={{ color: DASHBOARD.goldBright }}>
+              <div
+                className="dashboard-price"
+                style={{
+                  color: DASHBOARD.goldBright,
+                  fontSize: "clamp(1.65rem, 1.9vw, 2.55rem)",
+                  lineHeight: 1,
+                }}
+              >
                 {!loading && rateData ? formatPrice(rateData.ask) : <PriceLoader />}
               </div>
             </div>
@@ -856,9 +873,9 @@ const AuthenticatedHome: React.FC = () => {
             className="grid gap-5 min-h-0"
             style={{
               gridTemplateColumns: "1.28fr 1fr",
-              height: "calc(100% - clamp(11rem, 20vh, 16rem))",
-              marginTop: "clamp(0.3rem, 0.8vh, 0.75rem)",
-              paddingBottom: "1.25rem",
+              height: "calc(100% - clamp(9rem, 16.5vh, 13rem))",
+              marginTop: "clamp(0.1rem, 0.35vh, 0.4rem)",
+              paddingBottom: "0.35rem",
             }}
           >
             <DataTable rates={liveRates} loading={isLoading} />
@@ -866,7 +883,7 @@ const AuthenticatedHome: React.FC = () => {
             <div className="min-w-0 h-full flex flex-col gap-3">
               <ClockStrip />
 
-              <div className="flex flex-col gap-3 min-h-0">
+              <div className="flex flex-col gap-4 min-h-0 pt-8">
                 <MetalSpotCard
                   metal="gold"
                   quote={liveRates?.ouncePriceUsd}
@@ -879,7 +896,7 @@ const AuthenticatedHome: React.FC = () => {
                   loading={isLoading}
                 />
 
-                <section className="glass-dark rounded-2xl px-6 py-3">
+                <section className="glass-dark rounded-2xl px-6 py-4 text-lg">
                   <MarketStatusBadge isOpen={!isMarketClosed} />
                 </section>
               </div>
@@ -928,4 +945,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-
