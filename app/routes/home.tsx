@@ -493,32 +493,32 @@ const ClockItem: React.FC<{
   }, [timezone]);
 
   return (
-    <div className="flex items-center justify-center gap-2 min-w-0">
+    <div className="flex items-center justify-center gap-3 min-w-0">
       <img
         src={flagSrc}
         alt={country}
         className="shrink-0 object-contain"
-        style={{ width: "clamp(1.8rem, 2.2vw, 2.65rem)", height: "auto" }}
+        style={{ width: "clamp(2.45rem, 3vw, 3.75rem)", height: "auto" }}
       />
 
       <div className="leading-none min-w-0">
         <div
           className="font-extrabold uppercase tracking-wide"
-          style={{ color: "#70E6F5", fontSize: "clamp(0.68rem, 0.74vw, 0.95rem)" }}
+          style={{ color: "#70E6F5", fontSize: "clamp(0.95rem, 1.05vw, 1.35rem)" }}
         >
           {country}
         </div>
 
         <div
           className="mt-1 font-extrabold text-white dashboard-price whitespace-nowrap"
-          style={{ fontSize: "clamp(0.9rem, 0.96vw, 1.22rem)" }}
+          style={{ fontSize: "clamp(1.25rem, 1.45vw, 1.85rem)" }}
         >
           {time}
         </div>
 
         <div
           className="mt-1 text-white/55 uppercase"
-          style={{ fontSize: "clamp(0.48rem, 0.52vw, 0.68rem)" }}
+          style={{ fontSize: "clamp(0.62rem, 0.72vw, 0.95rem)" }}
         >
           {offset}
         </div>
@@ -529,8 +529,8 @@ const ClockItem: React.FC<{
 
 const ClockStrip: React.FC = () => (
   <div
-    className="grid grid-cols-4 items-center rounded-lg px-4 py-2 glass-dark"
-    style={{ minHeight: "clamp(3.65rem, 6.4vh, 4.7rem)" }}
+    className="grid grid-cols-4 items-center rounded-lg px-5 py-3 glass-dark shrink-0"
+    style={{ minHeight: "clamp(5rem, 8.4vh, 7rem)" }}
   >
     {WORLD_CLOCKS.map((clock) => (
       <ClockItem key={clock.country} {...clock} />
@@ -574,19 +574,19 @@ const MetalSpotCard: React.FC<{
 
   return (
     <section
-      className="glass-dark rounded-2xl px-7 py-5"
-      style={{ minHeight: "clamp(9.2rem, 17vh, 13.5rem)" }}
+      className="glass-dark rounded-2xl px-8 py-6 flex flex-col justify-center"
+      style={{ flex: "1 1 0", minHeight: 0 }}
     >
-      <div className="flex items-center gap-3 mb-1.5">
+      <div className="flex items-center gap-4 mb-3">
         <img
           src={imageSrc}
           alt={label}
           className="object-contain shrink-0"
-          style={{ width: "clamp(2.7rem, 3.35vw, 4.3rem)", height: "auto" }}
+          style={{ width: "clamp(3.2rem, 3.9vw, 5rem)", height: "auto" }}
         />
         <div
           className="font-extrabold tracking-[0.12em]"
-          style={{ color: accent, fontSize: "clamp(1.4rem, 1.55vw, 2.1rem)" }}
+          style={{ color: accent, fontSize: "clamp(1.65rem, 1.9vw, 2.55rem)" }}
         >
           {label}
         </div>
@@ -603,7 +603,7 @@ const MetalSpotCard: React.FC<{
             <div key={side} className="min-w-0 text-center">
               <div
                 className="font-extrabold tracking-[0.22em]"
-                style={{ color: "#ccd8ff", fontSize: "clamp(0.85rem, 0.95vw, 1.22rem)" }}
+                style={{ color: "#ccd8ff", fontSize: "clamp(1.02rem, 1.18vw, 1.55rem)" }}
               >
                 {side}
               </div>
@@ -616,7 +616,7 @@ const MetalSpotCard: React.FC<{
                     className="dashboard-price font-extrabold whitespace-nowrap"
                     style={{
                       color: accent,
-                      fontSize: "clamp(3.25rem, 3.7vw, 5rem)",
+                      fontSize: "clamp(4.1rem, 4.7vw, 6.35rem)",
                       lineHeight: 0.92,
                     }}
                   >
@@ -629,13 +629,13 @@ const MetalSpotCard: React.FC<{
                 className="mt-1 font-extrabold uppercase"
                 style={{
                   color: DASHBOARD.textMuted,
-                  fontSize: "clamp(0.95rem, 1.05vw, 1.35rem)",
+                  fontSize: "clamp(1.08rem, 1.25vw, 1.65rem)",
                 }}
               >
                 {hlLabel}{" "}
                 <span 
                   className="dashboard-price"
-                  style={{ color: accent, fontSize: "clamp(1.18rem, 1.3vw, 1.7rem)" }}
+                  style={{ color: accent, fontSize: "clamp(1.35rem, 1.55vw, 2rem)" }}
                 >
                   {formatHighLow(hlValue)}
                   </span>
@@ -686,7 +686,7 @@ const DataTable: React.FC<{
           border: "1px solid rgba(255,255,255,0.12)",
           backdropFilter: "blur(5px)",
           color: "#050505",
-          fontSize: "clamp(1.15rem, 1.25vw, 1.65rem)",
+          fontSize: "clamp(1.3rem, 1.45vw, 1.9rem)",
         }}
       >
         {["METAL", "WEIGHT", "BID (AED)", "ASK (AED)"].map((header) => (
@@ -706,7 +706,7 @@ const DataTable: React.FC<{
                 gridTemplateColumns: "1.4fr 0.8fr 1.2fr 1.2fr",
                 minHeight: 0,
                 color: DASHBOARD.text,
-                fontSize: "clamp(1.45rem, 1.65vw, 2.25rem)",
+                fontSize: "clamp(1.75rem, 2vw, 2.65rem)",
               }}
             >
               <div className="text-left">
@@ -724,7 +724,7 @@ const DataTable: React.FC<{
                 className="dashboard-price"
                 style={{
                   color: DASHBOARD.goldBright,
-                  fontSize: "clamp(1.65rem, 1.9vw, 2.55rem)",
+                  fontSize: "clamp(2rem, 2.25vw, 3rem)",
                   lineHeight: 1,
                 }}
               >
@@ -735,7 +735,7 @@ const DataTable: React.FC<{
                 className="dashboard-price"
                 style={{
                   color: DASHBOARD.goldBright,
-                  fontSize: "clamp(1.65rem, 1.9vw, 2.55rem)",
+                  fontSize: "clamp(2rem, 2.25vw, 3rem)",
                   lineHeight: 1,
                 }}
               >
@@ -882,8 +882,7 @@ const AuthenticatedHome: React.FC = () => {
 
             <div className="min-w-0 h-full flex flex-col gap-3">
               <ClockStrip />
-
-              <div className="flex flex-col gap-4 min-h-0 pt-8">
+              <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2">
                 <MetalSpotCard
                   metal="gold"
                   quote={liveRates?.ouncePriceUsd}
@@ -896,7 +895,13 @@ const AuthenticatedHome: React.FC = () => {
                   loading={isLoading}
                 />
 
-                <section className="glass-dark rounded-2xl px-6 py-4 text-lg">
+                <section
+                  className="glass-dark rounded-2xl px-6 py-4 flex items-center justify-center shrink-0"
+                  style={{
+                    minHeight: "clamp(4.6rem, 7.2vh, 6.5rem)",
+                    fontSize: "clamp(1.15rem, 1.4vw, 1.9rem)",
+                  }}
+                >
                   <MarketStatusBadge isOpen={!isMarketClosed} />
                 </section>
               </div>
