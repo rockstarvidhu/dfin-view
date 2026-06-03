@@ -27,7 +27,15 @@ const FontLoader: React.FC = () => (
       .dashboard-price {
         font-family: ${PRICE_FONT};
         font-variant-numeric: tabular-nums;
-        letter-spacing: 0.025em;
+        letter-spacing: 0.012em;
+      }
+
+      .table-price {
+        white-space: nowrap;
+      }
+
+      .metal-label {
+        white-space: nowrap;
       }
 
       .glass-dark {
@@ -493,32 +501,32 @@ const ClockItem: React.FC<{
   }, [timezone]);
 
   return (
-    <div className="flex items-center justify-center gap-3 min-w-0">
+    <div className="flex items-center justify-center gap-2 min-w-0">
       <img
         src={flagSrc}
         alt={country}
         className="shrink-0 object-contain"
-        style={{ width: "clamp(2.45rem, 3vw, 3.75rem)", height: "auto" }}
+        style={{ width: "clamp(2rem, 2.45vw, 3.25rem)", height: "auto" }}
       />
 
       <div className="leading-none min-w-0">
         <div
           className="font-extrabold uppercase tracking-wide"
-          style={{ color: "#70E6F5", fontSize: "clamp(0.95rem, 1.05vw, 1.35rem)" }}
+          style={{ color: "#70E6F5", fontSize: "clamp(0.78rem, 0.9vw, 1.15rem)" }}
         >
           {country}
         </div>
 
         <div
           className="mt-1 font-extrabold text-white dashboard-price whitespace-nowrap"
-          style={{ fontSize: "clamp(1.25rem, 1.45vw, 1.85rem)" }}
+          style={{ fontSize: "clamp(1rem, 1.15vw, 1.55rem)" }}
         >
           {time}
         </div>
 
         <div
           className="mt-1 text-white/55 uppercase"
-          style={{ fontSize: "clamp(0.62rem, 0.72vw, 0.95rem)" }}
+          style={{ fontSize: "clamp(0.5rem, 0.58vw, 0.78rem)" }}
         >
           {offset}
         </div>
@@ -529,8 +537,8 @@ const ClockItem: React.FC<{
 
 const ClockStrip: React.FC = () => (
   <div
-    className="grid grid-cols-4 items-center rounded-lg px-5 py-3 glass-dark shrink-0"
-    style={{ minHeight: "clamp(5rem, 8.4vh, 7rem)" }}
+    className="grid grid-cols-4 items-center rounded-lg px-4 py-2 glass-dark shrink-0"
+    style={{ minHeight: "clamp(4.1rem, 7vh, 5.8rem)" }}
   >
     {WORLD_CLOCKS.map((clock) => (
       <ClockItem key={clock.country} {...clock} />
@@ -574,25 +582,25 @@ const MetalSpotCard: React.FC<{
 
   return (
     <section
-      className="glass-dark rounded-2xl px-8 py-6 flex flex-col justify-center"
+      className="glass-dark rounded-2xl px-6 py-4 flex flex-col justify-center"
       style={{ flex: "1 1 0", minHeight: 0 }}
     >
-      <div className="flex items-center gap-4 mb-3">
+      <div className="flex items-center gap-3 mb-2">
         <img
           src={imageSrc}
           alt={label}
           className="object-contain shrink-0"
-          style={{ width: "clamp(3.2rem, 3.9vw, 5rem)", height: "auto" }}
+          style={{ width: "clamp(2.5rem, 3vw, 4rem)", height: "auto" }}
         />
         <div
           className="font-extrabold tracking-[0.12em]"
-          style={{ color: accent, fontSize: "clamp(1.65rem, 1.9vw, 2.55rem)" }}
+          style={{ color: accent, fontSize: "clamp(1.25rem, 1.45vw, 2rem)" }}
         >
           {label}
         </div>
       </div>
 
-      <div className="grid items-start gap-5" style={{ gridTemplateColumns: "1fr 1fr" }}>
+      <div className="grid items-start gap-2" style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)" }}>
         {(["BID", "ASK"] as const).map((side) => {
           const price = side === "BID" ? quote?.bid : quote?.ask;
           const flashClass = side === "BID" ? bidFlashClass : askFlashClass;
@@ -603,7 +611,7 @@ const MetalSpotCard: React.FC<{
             <div key={side} className="min-w-0 text-center">
               <div
                 className="font-extrabold tracking-[0.22em]"
-                style={{ color: "#ccd8ff", fontSize: "clamp(1.02rem, 1.18vw, 1.55rem)" }}
+                style={{ color: "#ccd8ff", fontSize: "clamp(0.78rem, 0.88vw, 1.15rem)" }}
               >
                 {side}
               </div>
@@ -616,7 +624,7 @@ const MetalSpotCard: React.FC<{
                     className="dashboard-price font-extrabold whitespace-nowrap"
                     style={{
                       color: accent,
-                      fontSize: "clamp(4.1rem, 4.7vw, 6.35rem)",
+                      fontSize: "clamp(2.8rem, 3.35vw, 4.7rem)",
                       lineHeight: 0.92,
                     }}
                   >
@@ -629,13 +637,13 @@ const MetalSpotCard: React.FC<{
                 className="mt-1 font-extrabold uppercase"
                 style={{
                   color: DASHBOARD.textMuted,
-                  fontSize: "clamp(1.08rem, 1.25vw, 1.65rem)",
+                  fontSize: "clamp(0.82rem, 0.95vw, 1.25rem)",
                 }}
               >
                 {hlLabel}{" "}
                 <span 
                   className="dashboard-price"
-                  style={{ color: accent, fontSize: "clamp(1.35rem, 1.55vw, 2rem)" }}
+                  style={{ color: accent, fontSize: "clamp(1rem, 1.15vw, 1.55rem)" }}
                 >
                   {formatHighLow(hlValue)}
                   </span>
@@ -680,13 +688,13 @@ const DataTable: React.FC<{
       <div
         className="grid gap-2 text-center rounded-lg px-4 py-2 font-extrabold"
         style={{
-          gridTemplateColumns: "1.4fr 0.8fr 1.2fr 1.2fr",
+          gridTemplateColumns: "1.35fr 0.55fr 1.3fr 1.3fr",
           background:
             "linear-gradient(90deg, rgba(211,168,59,0.74) 0%, rgba(248,231,138,0.68) 100%)",
           border: "1px solid rgba(255,255,255,0.12)",
           backdropFilter: "blur(5px)",
           color: "#050505",
-          fontSize: "clamp(1.3rem, 1.45vw, 1.9rem)",
+          fontSize: "clamp(1rem, 1.12vw, 1.45rem)",
         }}
       >
         {["METAL", "WEIGHT", "BID (AED)", "ASK (AED)"].map((header) => (
@@ -703,13 +711,16 @@ const DataTable: React.FC<{
               key={item.key}
               className="glass-row grid gap-2 text-center items-center rounded-lg px-4 py-1.5 font-extrabold flex-1"
               style={{
-                gridTemplateColumns: "1.4fr 0.8fr 1.2fr 1.2fr",
+                gridTemplateColumns: "1.35fr 0.55fr 1.3fr 1.3fr",
                 minHeight: 0,
                 color: DASHBOARD.text,
-                fontSize: "clamp(1.75rem, 2vw, 2.65rem)",
+                fontSize: "clamp(1.28rem, 1.45vw, 1.95rem)",
               }}
             >
-              <div className="text-left">
+              <div
+                className="text-left metal-label"
+                style={{ fontSize: "clamp(1.1rem, 1.25vw, 1.7rem)" }}
+              >
                 {item.label}
                 {item.purity && (
                   <span className="ml-2" style={{ color: DASHBOARD.goldBright }}>
@@ -721,10 +732,10 @@ const DataTable: React.FC<{
               <div style={{ color: DASHBOARD.textMuted }}>{item.weight}</div>
 
               <div
-                className="dashboard-price"
+                className="dashboard-price table-price"
                 style={{
                   color: DASHBOARD.goldBright,
-                  fontSize: "clamp(2rem, 2.25vw, 3rem)",
+                  fontSize: "clamp(1.35rem, 1.55vw, 2.15rem)",
                   lineHeight: 1,
                 }}
               >
@@ -732,10 +743,10 @@ const DataTable: React.FC<{
               </div>
 
               <div
-                className="dashboard-price"
+                className="dashboard-price table-price"
                 style={{
                   color: DASHBOARD.goldBright,
-                  fontSize: "clamp(2rem, 2.25vw, 3rem)",
+                  fontSize: "clamp(1.35rem, 1.55vw, 2.15rem)",
                   lineHeight: 1,
                 }}
               >
