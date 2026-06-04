@@ -235,7 +235,7 @@ const DataTable: React.FC<{ rates: MetalRates | null; loading: boolean }> = ({ r
   const formatPrice = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
-    <div className="w-full h-full flex flex-col justify-between rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#0a0e14]">
+    <div className="w-full h-full flex flex-col justify-end rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#0a0e14]">
       {/* Table Header */}
       <div
         className="flex items-center px-[2vw] shrink-0"
@@ -245,16 +245,15 @@ const DataTable: React.FC<{ rates: MetalRates | null; loading: boolean }> = ({ r
           height: "6.5vh",
         }}
       >
-        {/* Adjusted Grid Columns for More Horizontal Label Space */}
-        <div className="grid grid-cols-[1.6fr_0.6fr_1.7fr_1.7fr] gap-[1vw] w-full">
+        {/* Increased 2nd column (Weight) from 0.6fr to 0.8fr to add breathing space before Bid */}
+        <div className="grid grid-cols-[1.6fr_0.8fr_1.7fr_1.7fr] gap-[1vw] w-full">
           <div className="font-extrabold text-[#050505]" style={{ fontSize: `${0.85 * fontScale}rem` }}>METAL</div>
           <div className="font-extrabold text-[#050505] text-center" style={{ fontSize: `${0.85 * fontScale}rem` }}>WEIGHT</div>
-          <div className="font-extrabold text-[#050505] text-right" style={{ fontSize: `${0.85 * fontScale}rem` }}>BID (AED)</div>
-          <div className="font-extrabold text-[#050505] text-right" style={{ fontSize: `${0.85 * fontScale}rem` }}>ASK (AED)</div>
+          <div className="font-extrabold text-[#050505] text-left" style={{ fontSize: `${0.85 * fontScale}rem` }}>BID (AED)</div>
+          <div className="font-extrabold text-[#050505] text-left" style={{ fontSize: `${0.85 * fontScale}rem` }}>ASK (AED)</div>
         </div>
       </div>
 
-      {/* Table Rows using flex-1 to naturally stretch exactly without arbitrary row heights */}
       <div className="flex flex-col flex-1 w-full">
         {tableData.map((item, index) => {
           const rateData = rates?.[item.key as keyof MetalRates] as RateQuote | undefined;
@@ -263,8 +262,7 @@ const DataTable: React.FC<{ rates: MetalRates | null; loading: boolean }> = ({ r
               key={index}
               className={`flex-1 flex items-center px-[2vw] ${index !== tableData.length - 1 ? 'border-b border-white/5' : ''}`}
             >
-              <div className="grid grid-cols-[1.6fr_0.6fr_1.7fr_1.7fr] gap-[1vw] items-center w-full min-w-0">
-                {/* Reduced label font size to guarantee NO ellipses cutoffs */}
+              <div className="grid grid-cols-[1.6fr_0.8fr_1.7fr_1.7fr] gap-[1vw] items-center w-full min-w-0">
                 <div className="font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontSize: `${0.85 * fontScale}rem` }}>
                   {item.label}
                   {item.purity && <span className="ml-[0.5vw]" style={{ color: DASHBOARD.goldBright, fontSize: `${0.75 * fontScale}rem` }}>{item.purity}</span>}
@@ -273,16 +271,16 @@ const DataTable: React.FC<{ rates: MetalRates | null; loading: boolean }> = ({ r
                   {item.weight}
                 </div>
                 <div 
-                  className="font-extrabold text-right whitespace-nowrap overflow-hidden text-ellipsis" 
+                  className="font-extrabold text-left whitespace-nowrap overflow-hidden text-ellipsis" 
                   style={{ color: DASHBOARD.goldBright, fontSize: `${1.4 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em" }}
                 >
-                  {!loading && rateData ? formatPrice(rateData.bid) : <div className="h-[2.5vh] w-[6vw] ml-auto bg-gray-600/50 animate-pulse rounded" />}
+                  {!loading && rateData ? formatPrice(rateData.bid) : <div className="h-[2.5vh] w-[6vw] bg-gray-600/50 animate-pulse rounded" />}
                 </div>
                 <div 
-                  className="font-extrabold text-right whitespace-nowrap overflow-hidden text-ellipsis" 
+                  className="font-extrabold text-left whitespace-nowrap overflow-hidden text-ellipsis" 
                   style={{ color: DASHBOARD.goldBright, fontSize: `${1.4 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em" }}
                 >
-                  {!loading && rateData ? formatPrice(rateData.ask) : <div className="h-[2.5vh] w-[6vw] ml-auto bg-gray-600/50 animate-pulse rounded" />}
+                  {!loading && rateData ? formatPrice(rateData.ask) : <div className="h-[2.5vh] w-[6vw] bg-gray-600/50 animate-pulse rounded" />}
                 </div>
               </div>
             </div>
@@ -311,13 +309,17 @@ const MetalSpotCard: React.FC<{ metal: "gold" | "silver"; quote?: RateQuote; loa
   const formatHighLow = (v: number | undefined) => typeof v === "number" && !Number.isNaN(v) ? v.toFixed(decimals) : "--";
 
   return (
-    // Flex-1 handles dynamic sizing, min-h-0 prevents overflow pushing against bounds
-    <section className="bg-[#0a0e14] border border-white/5 rounded-2xl p-[1.5vw] flex flex-col justify-center relative shadow-2xl w-full flex-1 min-h-0" style={{ borderLeft: `4px solid ${accent}` }}>
+    <section className="bg-[#0a0e14] border border-white/5 rounded-2xl p-[1.5vw] flex flex-col relative shadow-2xl w-full flex-1 min-h-0" style={{ borderLeft: `4px solid ${accent}` }}>
       <div className={`absolute top-0 left-0 right-0 h-[0.4vh] rounded-tr-2xl ${gradientBar}`} />
 
-      <div className="flex items-center gap-[1vw] mb-[0.5vh]">
-        <img src={imageSrc} alt={label} className="object-contain w-[2.5vw]" />
-        <div className="font-extrabold tracking-[0.1em]" style={{ color: accent, fontSize: `${1.1 * fontScale}rem` }}>{label}</div>
+      {/* REPLACED FLEX WITH GRID TO PERFECTLY CENTER LABEL OVER BID/ASK */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center mb-[0.5vh]">
+        <div /> 
+        <div className="flex items-center gap-[0.5vw]">
+          <img src={imageSrc} alt={label} className="object-contain w-[2.5vw]" />
+          <div className="font-extrabold tracking-[0.1em]" style={{ color: accent, fontSize: `${1.1 * fontScale}rem` }}>{label}</div>
+        </div>
+        <div />
       </div>
 
       <div className="flex w-full mt-[0.5vh]">
