@@ -235,17 +235,18 @@ const DataTable: React.FC<{ rates: MetalRates | null; loading: boolean }> = ({ r
   const formatPrice = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
-    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#0a0e14]">
-      {/* Fixed Height Header */}
+    <div className="w-full h-full flex flex-col justify-between rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#0a0e14]">
+      {/* Table Header */}
       <div
         className="flex items-center px-[2vw] shrink-0"
         style={{
           backgroundColor: "rgba(211,168,59,0.9)",
           background: "linear-gradient(90deg, #D3A83B 0%, #F8E78A 100%)",
-          height: "7.5vh",
+          height: "6.5vh",
         }}
       >
-        <div className="grid grid-cols-[1.3fr_0.7fr_1.8fr_1.8fr] gap-[1vw] w-full">
+        {/* Adjusted Grid Columns for More Horizontal Label Space */}
+        <div className="grid grid-cols-[1.6fr_0.6fr_1.7fr_1.7fr] gap-[1vw] w-full">
           <div className="font-extrabold text-[#050505]" style={{ fontSize: `${0.85 * fontScale}rem` }}>METAL</div>
           <div className="font-extrabold text-[#050505] text-center" style={{ fontSize: `${0.85 * fontScale}rem` }}>WEIGHT</div>
           <div className="font-extrabold text-[#050505] text-right" style={{ fontSize: `${0.85 * fontScale}rem` }}>BID (AED)</div>
@@ -253,7 +254,7 @@ const DataTable: React.FC<{ rates: MetalRates | null; loading: boolean }> = ({ r
         </div>
       </div>
 
-      {/* Flex-1 stretches rows naturally to fill exact height of right-side cards */}
+      {/* Table Rows using flex-1 to naturally stretch exactly without arbitrary row heights */}
       <div className="flex flex-col flex-1 w-full">
         {tableData.map((item, index) => {
           const rateData = rates?.[item.key as keyof MetalRates] as RateQuote | undefined;
@@ -262,24 +263,24 @@ const DataTable: React.FC<{ rates: MetalRates | null; loading: boolean }> = ({ r
               key={index}
               className={`flex-1 flex items-center px-[2vw] ${index !== tableData.length - 1 ? 'border-b border-white/5' : ''}`}
             >
-              <div className="grid grid-cols-[1.3fr_0.7fr_1.8fr_1.8fr] gap-[1vw] items-center w-full min-w-0">
-                <div className="font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontSize: `${0.95 * fontScale}rem` }}>
+              <div className="grid grid-cols-[1.6fr_0.6fr_1.7fr_1.7fr] gap-[1vw] items-center w-full min-w-0">
+                {/* Reduced label font size to guarantee NO ellipses cutoffs */}
+                <div className="font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontSize: `${0.85 * fontScale}rem` }}>
                   {item.label}
-                  {item.purity && <span className="ml-[0.5vw]" style={{ color: DASHBOARD.goldBright, fontSize: `${0.8 * fontScale}rem` }}>{item.purity}</span>}
+                  {item.purity && <span className="ml-[0.5vw]" style={{ color: DASHBOARD.goldBright, fontSize: `${0.75 * fontScale}rem` }}>{item.purity}</span>}
                 </div>
-                <div className="font-bold text-center" style={{ color: DASHBOARD.textMuted, fontSize: `${0.9 * fontScale}rem` }}>
+                <div className="font-bold text-center" style={{ color: DASHBOARD.textMuted, fontSize: `${0.85 * fontScale}rem` }}>
                   {item.weight}
                 </div>
-                {/* STRICTLY REDUCED PRICE FONT SIZE TO 1.45 TO PREVENT TRUNCATION */}
                 <div 
                   className="font-extrabold text-right whitespace-nowrap overflow-hidden text-ellipsis" 
-                  style={{ color: DASHBOARD.goldBright, fontSize: `${1.45 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em" }}
+                  style={{ color: DASHBOARD.goldBright, fontSize: `${1.4 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em" }}
                 >
                   {!loading && rateData ? formatPrice(rateData.bid) : <div className="h-[2.5vh] w-[6vw] ml-auto bg-gray-600/50 animate-pulse rounded" />}
                 </div>
                 <div 
                   className="font-extrabold text-right whitespace-nowrap overflow-hidden text-ellipsis" 
-                  style={{ color: DASHBOARD.goldBright, fontSize: `${1.45 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em" }}
+                  style={{ color: DASHBOARD.goldBright, fontSize: `${1.4 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em" }}
                 >
                   {!loading && rateData ? formatPrice(rateData.ask) : <div className="h-[2.5vh] w-[6vw] ml-auto bg-gray-600/50 animate-pulse rounded" />}
                 </div>
@@ -310,8 +311,8 @@ const MetalSpotCard: React.FC<{ metal: "gold" | "silver"; quote?: RateQuote; loa
   const formatHighLow = (v: number | undefined) => typeof v === "number" && !Number.isNaN(v) ? v.toFixed(decimals) : "--";
 
   return (
-    // Flex-1 lets the card naturally expand vertically in the gap space without breaking layout
-    <section className="bg-[#0a0e14] border border-white/5 rounded-2xl p-[1.5vw] flex flex-col justify-center relative shadow-2xl w-full flex-1" style={{ borderLeft: `4px solid ${accent}` }}>
+    // Flex-1 handles dynamic sizing, min-h-0 prevents overflow pushing against bounds
+    <section className="bg-[#0a0e14] border border-white/5 rounded-2xl p-[1.5vw] flex flex-col justify-center relative shadow-2xl w-full flex-1 min-h-0" style={{ borderLeft: `4px solid ${accent}` }}>
       <div className={`absolute top-0 left-0 right-0 h-[0.4vh] rounded-tr-2xl ${gradientBar}`} />
 
       <div className="flex items-center gap-[1vw] mb-[0.5vh]">
@@ -334,13 +335,12 @@ const MetalSpotCard: React.FC<{ metal: "gold" | "silver"; quote?: RateQuote; loa
               
               <div className={`mt-[0.5vh] w-[95%] h-[6.5vh] rounded-xl flex items-center justify-center transition-colors ${bgClass}`}>
                 {loading || price === undefined ? <div className="h-[4vh] w-[60%] bg-gray-600/50 animate-pulse rounded" /> : (
-                  // STRICTLY REDUCED PRICE FONT SIZE TO 2.3 TO PREVENT TRUNCATION
                   <span 
                     className={`font-extrabold leading-none whitespace-nowrap overflow-hidden text-ellipsis ${textClass}`} 
                     style={{ 
                       '--accent-color': accent, 
                       color: "var(--accent-color)", 
-                      fontSize: `${2.3 * fontScale}rem`,
+                      fontSize: `${2.2 * fontScale}rem`,
                       fontFamily: "'Inter', sans-serif", 
                       fontVariantNumeric: "tabular-nums", 
                       fontFeatureSettings: '"tnum" 1', 
@@ -392,7 +392,7 @@ const AuthenticatedHome: React.FC = () => {
   const logoSrc = isClient ? getCompanyLogo() || ASSETS.fallbackLogo : ASSETS.fallbackLogo;
 
   return (
-    <div className="flex flex-col w-screen h-screen px-[2vw] py-[2.5vh] text-white overflow-hidden bg-[#080808] box-border" style={{ fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif" }}>
+    <div className="flex flex-col w-screen h-screen px-[2vw] py-[2vh] text-white overflow-hidden bg-[#080808] box-border" style={{ fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif" }}>
       <FontLoader />
 
       <div className="absolute inset-0 z-0" style={{
@@ -404,10 +404,9 @@ const AuthenticatedHome: React.FC = () => {
       <div className="relative z-10 flex flex-col w-full h-full justify-between">
         
         {/* HEADER */}
-        <header className="flex w-full justify-between items-center" style={{ height: "17.5vh" }}>
+        <header className="flex w-full justify-between items-center" style={{ height: "18vh" }}>
           
           <div className="w-[58%] h-full relative">
-            
             {/* Absolute positioning anchors the Date perfectly to the left edge without pushing logo */}
             <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-center border-r border-white/20 pr-[1.5vw] z-20">
               <svg className="w-[2.5vw] h-[2.5vw] mb-[0.5vh]" viewBox="0 0 24 24" fill="none" stroke={DASHBOARD.date} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -422,19 +421,16 @@ const AuthenticatedHome: React.FC = () => {
               </div>
             </div>
 
-            {/* Logo is placed absolute-center in the 58% bounds. Massive 150% height overrides empty space */}
+            {/* Logo is placed absolutely in the center. Enalrged gracefully to cover space without shifting UI. */}
             <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-              <img src={logoSrc} alt="Company Logo" className="h-[150%] max-h-[24vh] w-[80%] object-contain" />
+              <img src={logoSrc} alt="Company Logo" className="h-[14vh] w-auto max-w-[80%] object-contain" />
             </div>
-            
           </div>
 
-          {/* Clean Showcase Card without dark rectangular box or inner paddings */}
           <div className="w-[40%] h-full relative rounded-2xl shadow-2xl overflow-hidden border border-white/10">
             {ASSETS.showcase.map((src, i) => (
-              <img key={src} src={src} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: 0, animation: `metalShowcase 16s infinite ${i * 4}s` }} />
+              <img key={src} src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-0" style={{ animation: `metalShowcase 16s infinite ${i * 4}s` }} />
             ))}
-            
             <button onClick={handleLogout} className="absolute top-[0.5vw] right-[0.5vw] text-white/40 hover:text-white p-[0.5vw] transition-colors z-50 cursor-pointer">
               <svg className="w-[2vw] h-[2vw]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" />
@@ -443,18 +439,16 @@ const AuthenticatedHome: React.FC = () => {
           </div>
         </header>
 
-        {/* MAIN BODY - Gap reduced to mt-[1.5vh] to close space between GIF and Clocks */}
-        <main className="flex w-full justify-between mt-[1.5vh]" style={{ height: "67vh" }}>
+        {/* MAIN BODY */}
+        <main className="flex w-full justify-between mt-[2vh]" style={{ height: "62vh" }}>
           
-          {/* Table Container Height is exactly 100% of the 67vh, ensuring perfect top/bottom alignment */}
           <div className="w-[58%] h-full">
             <DataTable rates={liveRates} loading={isLoading} />
           </div>
 
-          <div className="w-[40%] h-full flex flex-col gap-[1.5vh]">
+          <div className="w-[40%] h-full flex flex-col gap-[1vh]">
             
-            {/* Clocks Row */}
-            <div className="h-[8vh] shrink-0 w-full flex justify-between items-center bg-[#0c121c] border border-white/10 rounded-2xl px-[2vw] shadow-xl">
+            <div className="h-[7.5vh] shrink-0 w-full flex justify-between items-center bg-[#0c121c] border border-white/10 rounded-2xl px-[2vw] shadow-xl">
               {WORLD_CLOCKS.map((clock) => (
                 <div key={clock.country} className="flex items-center gap-[0.5vw]">
                   <img src={clock.flagSrc} alt={clock.country} className="object-contain w-[1.8vw]" />
@@ -471,7 +465,6 @@ const AuthenticatedHome: React.FC = () => {
             <MetalSpotCard metal="gold" quote={liveRates?.ouncePriceUsd} loading={isLoading} />
             <MetalSpotCard metal="silver" quote={liveRates?.silverOuncePriceUsd} loading={isLoading} />
             
-            {/* Market Status Row */}
             <div className="h-[5vh] shrink-0 bg-[#0c121c] border border-white/10 rounded-2xl flex items-center overflow-hidden w-full">
               <div className="ticker-track-slow font-extrabold tracking-widest flex items-center h-full" style={{ color: !isMarketClosed ? DASHBOARD.green : DASHBOARD.red, fontSize: `${0.9 * fontScale}rem`, lineHeight: 1 }}>
                 {Array.from({ length: 12 }).map((_, i) => (
@@ -486,7 +479,7 @@ const AuthenticatedHome: React.FC = () => {
         </main>
 
         {/* FOOTER */}
-        <footer className="mt-[1.5vh] flex items-center px-[2vw] border-t border-white/10 bg-[#000000]/80 rounded-2xl w-full shadow-2xl shrink-0" style={{ height: "7.5vh" }}>
+        <footer className="mt-[2vh] flex items-center px-[2vw] border-t border-white/10 bg-[#000000]/80 rounded-2xl w-full shadow-2xl shrink-0" style={{ height: "7vh" }}>
           <div className="flex items-center gap-[1vw] shrink-0">
             <svg className="w-[1.1vw] h-[1.1vw]" viewBox="0 0 24 24" fill="none" stroke={DASHBOARD.textMuted} strokeWidth="2">
               <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
