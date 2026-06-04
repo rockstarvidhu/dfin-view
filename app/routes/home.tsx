@@ -54,7 +54,6 @@ const FontLoader: React.FC = () => (
     {`
       @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap');
 
-      /* Fixed NASDAQ Style Animations with CSS Variables to override inline styles */
       @keyframes nasdaqBgUp {
         0%, 40% { background-color: #00FF00; }
         100% { background-color: transparent; }
@@ -223,7 +222,6 @@ const useUAETime = () => {
   return time;
 };
 
-// Data Table Setup
 const DataTable: React.FC<{ rates: MetalRates | null; loading: boolean }> = ({ rates, loading }) => {
   const fontScale = useTVFontScale();
   const tableData = [
@@ -237,62 +235,63 @@ const DataTable: React.FC<{ rates: MetalRates | null; loading: boolean }> = ({ r
   const formatPrice = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
-    <div className="w-full flex flex-col justify-end gap-[1.5vh]">
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#0a0e14]">
+      {/* Fixed Height Header */}
       <div
-        className="rounded-xl flex items-center px-[2vw] border border-white/10"
+        className="flex items-center px-[2vw] shrink-0"
         style={{
           backgroundColor: "rgba(211,168,59,0.9)",
           background: "linear-gradient(90deg, #D3A83B 0%, #F8E78A 100%)",
-          height: "7vh",
+          height: "7.5vh",
         }}
       >
-        {/* Adjusted column widths to give PRICES maximum breathing room to prevent ellipses */}
         <div className="grid grid-cols-[1.3fr_0.7fr_1.8fr_1.8fr] gap-[1vw] w-full">
-          <div className="font-extrabold text-[#050505]" style={{ fontSize: `${0.9 * fontScale}rem` }}>METAL</div>
-          <div className="font-extrabold text-[#050505] text-center" style={{ fontSize: `${0.9 * fontScale}rem` }}>WEIGHT</div>
-          <div className="font-extrabold text-[#050505] text-right" style={{ fontSize: `${0.9 * fontScale}rem` }}>BID (AED)</div>
-          <div className="font-extrabold text-[#050505] text-right" style={{ fontSize: `${0.9 * fontScale}rem` }}>ASK (AED)</div>
+          <div className="font-extrabold text-[#050505]" style={{ fontSize: `${0.85 * fontScale}rem` }}>METAL</div>
+          <div className="font-extrabold text-[#050505] text-center" style={{ fontSize: `${0.85 * fontScale}rem` }}>WEIGHT</div>
+          <div className="font-extrabold text-[#050505] text-right" style={{ fontSize: `${0.85 * fontScale}rem` }}>BID (AED)</div>
+          <div className="font-extrabold text-[#050505] text-right" style={{ fontSize: `${0.85 * fontScale}rem` }}>ASK (AED)</div>
         </div>
       </div>
 
-      {tableData.map((item, index) => {
-        const rateData = rates?.[item.key as keyof MetalRates] as RateQuote | undefined;
-        return (
-          <div
-            key={index}
-            className="rounded-xl flex items-center px-[2vw] border border-white/5"
-            style={{ backgroundColor: "rgba(10, 14, 20, 0.95)", height: "9vh" }}
-          >
-            <div className="grid grid-cols-[1.3fr_0.7fr_1.8fr_1.8fr] gap-[1vw] items-center w-full">
-              {/* Reduced font sizes to prevent container blowouts */}
-              <div className="font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontSize: `${1.0 * fontScale}rem` }}>
-                {item.label}
-                {item.purity && <span className="ml-[0.5vw]" style={{ color: DASHBOARD.goldBright, fontSize: `${0.9 * fontScale}rem` }}>{item.purity}</span>}
-              </div>
-              <div className="font-bold text-center" style={{ color: DASHBOARD.textMuted, fontSize: `${0.9 * fontScale}rem` }}>
-                {item.weight}
-              </div>
-              <div 
-                className="font-extrabold text-right whitespace-nowrap overflow-hidden text-ellipsis" 
-                style={{ color: DASHBOARD.goldBright, fontSize: `${1.6 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em" }}
-              >
-                {!loading && rateData ? formatPrice(rateData.bid) : <div className="h-[3vh] w-[6vw] ml-auto bg-gray-600/50 animate-pulse rounded" />}
-              </div>
-              <div 
-                className="font-extrabold text-right whitespace-nowrap overflow-hidden text-ellipsis" 
-                style={{ color: DASHBOARD.goldBright, fontSize: `${1.6 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em" }}
-              >
-                {!loading && rateData ? formatPrice(rateData.ask) : <div className="h-[3vh] w-[6vw] ml-auto bg-gray-600/50 animate-pulse rounded" />}
+      {/* Flex-1 stretches rows naturally to fill exact height of right-side cards */}
+      <div className="flex flex-col flex-1 w-full">
+        {tableData.map((item, index) => {
+          const rateData = rates?.[item.key as keyof MetalRates] as RateQuote | undefined;
+          return (
+            <div
+              key={index}
+              className={`flex-1 flex items-center px-[2vw] ${index !== tableData.length - 1 ? 'border-b border-white/5' : ''}`}
+            >
+              <div className="grid grid-cols-[1.3fr_0.7fr_1.8fr_1.8fr] gap-[1vw] items-center w-full min-w-0">
+                <div className="font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontSize: `${0.95 * fontScale}rem` }}>
+                  {item.label}
+                  {item.purity && <span className="ml-[0.5vw]" style={{ color: DASHBOARD.goldBright, fontSize: `${0.8 * fontScale}rem` }}>{item.purity}</span>}
+                </div>
+                <div className="font-bold text-center" style={{ color: DASHBOARD.textMuted, fontSize: `${0.9 * fontScale}rem` }}>
+                  {item.weight}
+                </div>
+                {/* STRICTLY REDUCED PRICE FONT SIZE TO 1.45 TO PREVENT TRUNCATION */}
+                <div 
+                  className="font-extrabold text-right whitespace-nowrap overflow-hidden text-ellipsis" 
+                  style={{ color: DASHBOARD.goldBright, fontSize: `${1.45 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em" }}
+                >
+                  {!loading && rateData ? formatPrice(rateData.bid) : <div className="h-[2.5vh] w-[6vw] ml-auto bg-gray-600/50 animate-pulse rounded" />}
+                </div>
+                <div 
+                  className="font-extrabold text-right whitespace-nowrap overflow-hidden text-ellipsis" 
+                  style={{ color: DASHBOARD.goldBright, fontSize: `${1.45 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em" }}
+                >
+                  {!loading && rateData ? formatPrice(rateData.ask) : <div className="h-[2.5vh] w-[6vw] ml-auto bg-gray-600/50 animate-pulse rounded" />}
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 };
 
-// Metal Spot Card Setup
 const MetalSpotCard: React.FC<{ metal: "gold" | "silver"; quote?: RateQuote; loading: boolean }> = ({ metal, quote, loading }) => {
   const fontScale     = useTVFontScale();
   const isGold        = metal === "gold";
@@ -311,12 +310,12 @@ const MetalSpotCard: React.FC<{ metal: "gold" | "silver"; quote?: RateQuote; loa
   const formatHighLow = (v: number | undefined) => typeof v === "number" && !Number.isNaN(v) ? v.toFixed(decimals) : "--";
 
   return (
-    <section className="bg-[#0a0e14] border border-white/5 rounded-2xl p-[1.5vw] flex flex-col justify-center relative shadow-2xl w-full" style={{ height: "23vh", borderLeft: `4px solid ${accent}` }}>
+    // Flex-1 lets the card naturally expand vertically in the gap space without breaking layout
+    <section className="bg-[#0a0e14] border border-white/5 rounded-2xl p-[1.5vw] flex flex-col justify-center relative shadow-2xl w-full flex-1" style={{ borderLeft: `4px solid ${accent}` }}>
       <div className={`absolute top-0 left-0 right-0 h-[0.4vh] rounded-tr-2xl ${gradientBar}`} />
 
       <div className="flex items-center gap-[1vw] mb-[0.5vh]">
         <img src={imageSrc} alt={label} className="object-contain w-[2.5vw]" />
-        {/* Reduced Label size */}
         <div className="font-extrabold tracking-[0.1em]" style={{ color: accent, fontSize: `${1.1 * fontScale}rem` }}>{label}</div>
       </div>
 
@@ -333,15 +332,15 @@ const MetalSpotCard: React.FC<{ metal: "gold" | "silver"; quote?: RateQuote; loa
             <div key={side} className="flex flex-col items-center w-[50%] min-w-0">
               <div className="font-extrabold tracking-[0.2em] text-[#ccd8ff]" style={{ fontSize: `${0.8 * fontScale}rem` }}>{side}</div>
               
-              <div className={`mt-[0.5vh] w-[90%] h-[7.5vh] rounded-xl flex items-center justify-center transition-colors ${bgClass}`}>
+              <div className={`mt-[0.5vh] w-[95%] h-[6.5vh] rounded-xl flex items-center justify-center transition-colors ${bgClass}`}>
                 {loading || price === undefined ? <div className="h-[4vh] w-[60%] bg-gray-600/50 animate-pulse rounded" /> : (
-                  // Reduced main price scale to safely fit Inter numbers without ellipses
+                  // STRICTLY REDUCED PRICE FONT SIZE TO 2.3 TO PREVENT TRUNCATION
                   <span 
                     className={`font-extrabold leading-none whitespace-nowrap overflow-hidden text-ellipsis ${textClass}`} 
                     style={{ 
                       '--accent-color': accent, 
                       color: "var(--accent-color)", 
-                      fontSize: `${2.5 * fontScale}rem`,
+                      fontSize: `${2.3 * fontScale}rem`,
                       fontFamily: "'Inter', sans-serif", 
                       fontVariantNumeric: "tabular-nums", 
                       fontFeatureSettings: '"tnum" 1', 
@@ -353,9 +352,9 @@ const MetalSpotCard: React.FC<{ metal: "gold" | "silver"; quote?: RateQuote; loa
                 )}
               </div>
 
-              <div className="mt-[1vh] font-extrabold uppercase" style={{ color: DASHBOARD.textMuted, fontSize: `${0.7 * fontScale}rem` }}>
+              <div className="mt-[1vh] font-extrabold uppercase" style={{ color: DASHBOARD.textMuted, fontSize: `${0.65 * fontScale}rem` }}>
                 {hlLabel}{" "}
-                <span style={{ color: accent, fontSize: `${0.9 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontFeatureSettings: '"tnum" 1' }}>{formatHighLow(hlValue)}</span>
+                <span style={{ color: accent, fontSize: `${0.85 * fontScale}rem`, fontFamily: "'Inter', sans-serif", fontFeatureSettings: '"tnum" 1' }}>{formatHighLow(hlValue)}</span>
               </div>
             </div>
           );
@@ -366,7 +365,7 @@ const MetalSpotCard: React.FC<{ metal: "gold" | "silver"; quote?: RateQuote; loa
 };
 
 const AuthenticatedHome: React.FC = () => {
-  useGoogleFont(); // Triggers the direct head injection of the Inter font
+  useGoogleFont(); 
   
   const fontScale                           = useTVFontScale();
   const [isLoading, setIsLoading]           = useState(true);
@@ -393,7 +392,7 @@ const AuthenticatedHome: React.FC = () => {
   const logoSrc = isClient ? getCompanyLogo() || ASSETS.fallbackLogo : ASSETS.fallbackLogo;
 
   return (
-    <div className="flex flex-col w-screen h-screen px-[2vw] py-[3vh] text-white overflow-hidden bg-[#080808] box-border" style={{ fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif" }}>
+    <div className="flex flex-col w-screen h-screen px-[2vw] py-[2.5vh] text-white overflow-hidden bg-[#080808] box-border" style={{ fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif" }}>
       <FontLoader />
 
       <div className="absolute inset-0 z-0" style={{
@@ -405,15 +404,17 @@ const AuthenticatedHome: React.FC = () => {
       <div className="relative z-10 flex flex-col w-full h-full justify-between">
         
         {/* HEADER */}
-        <header className="flex w-full justify-between items-center" style={{ height: "18vh" }}>
+        <header className="flex w-full justify-between items-center" style={{ height: "17.5vh" }}>
           
-          <div className="w-[58%] h-full flex items-center pr-[2vw]">
-            <div className="flex flex-col items-center justify-center border-r border-white/20 pr-[1.5vw] shrink-0 h-full">
+          <div className="w-[58%] h-full relative">
+            
+            {/* Absolute positioning anchors the Date perfectly to the left edge without pushing logo */}
+            <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-center border-r border-white/20 pr-[1.5vw] z-20">
               <svg className="w-[2.5vw] h-[2.5vw] mb-[0.5vh]" viewBox="0 0 24 24" fill="none" stroke={DASHBOARD.date} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
                 <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              <div className="font-extrabold uppercase leading-none mb-[0.3vh]" style={{ fontFamily: "'Barlow Condensed', sans-serif", color: DASHBOARD.date, fontSize: `${1.1 * fontScale}rem` }}>
+              <div className="font-normal uppercase leading-tight mb-[0.3vh]" style={{ fontFamily: "'Barlow Condensed', sans-serif", color: DASHBOARD.date, fontSize: `${1.1 * fontScale}rem` }}>
                 {currentDate.toLocaleDateString("en-US", { timeZone: "Asia/Dubai", weekday: "long" })}
               </div>
               <div className="font-extrabold uppercase leading-none" style={{ fontFamily: "'Barlow Condensed', sans-serif", color: DASHBOARD.date, fontSize: `${1.4 * fontScale}rem` }}>
@@ -421,18 +422,20 @@ const AuthenticatedHome: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex-1 h-full flex items-center justify-center pl-[1vw]">
-              <img src={logoSrc} alt="Company Logo" className="h-full max-h-[16vh] w-[80%] object-contain" />
+            {/* Logo is placed absolute-center in the 58% bounds. Massive 150% height overrides empty space */}
+            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+              <img src={logoSrc} alt="Company Logo" className="h-[150%] max-h-[24vh] w-[80%] object-contain" />
             </div>
+            
           </div>
 
-          {/* SHOWCASE CARD: Removed Padding & BG color to fix the black box issue */}
+          {/* Clean Showcase Card without dark rectangular box or inner paddings */}
           <div className="w-[40%] h-full relative rounded-2xl shadow-2xl overflow-hidden border border-white/10">
             {ASSETS.showcase.map((src, i) => (
-              <img key={src} src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-0" style={{ animation: `metalShowcase 16s infinite ${i * 4}s` }} />
+              <img key={src} src={src} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: 0, animation: `metalShowcase 16s infinite ${i * 4}s` }} />
             ))}
             
-            <button onClick={handleLogout} className="absolute top-[1vw] right-[1vw] text-white/40 hover:text-white p-[0.5vw] transition-colors z-50 cursor-pointer">
+            <button onClick={handleLogout} className="absolute top-[0.5vw] right-[0.5vw] text-white/40 hover:text-white p-[0.5vw] transition-colors z-50 cursor-pointer">
               <svg className="w-[2vw] h-[2vw]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" />
               </svg>
@@ -440,22 +443,24 @@ const AuthenticatedHome: React.FC = () => {
           </div>
         </header>
 
-        {/* MAIN BODY */}
-        <main className="flex w-full justify-between mt-[2vh]" style={{ height: "64vh" }}>
+        {/* MAIN BODY - Gap reduced to mt-[1.5vh] to close space between GIF and Clocks */}
+        <main className="flex w-full justify-between mt-[1.5vh]" style={{ height: "67vh" }}>
           
-          <div className="w-[58%] h-full flex flex-col justify-end pb-[2vh]">
+          {/* Table Container Height is exactly 100% of the 67vh, ensuring perfect top/bottom alignment */}
+          <div className="w-[58%] h-full">
             <DataTable rates={liveRates} loading={isLoading} />
           </div>
 
-          <div className="w-[40%] h-full flex flex-col justify-between">
+          <div className="w-[40%] h-full flex flex-col gap-[1.5vh]">
             
-            <div className="w-full flex justify-between items-center bg-[#0c121c] border border-white/10 rounded-2xl px-[2vw] shadow-xl" style={{ height: "9vh" }}>
+            {/* Clocks Row */}
+            <div className="h-[8vh] shrink-0 w-full flex justify-between items-center bg-[#0c121c] border border-white/10 rounded-2xl px-[2vw] shadow-xl">
               {WORLD_CLOCKS.map((clock) => (
                 <div key={clock.country} className="flex items-center gap-[0.5vw]">
                   <img src={clock.flagSrc} alt={clock.country} className="object-contain w-[1.8vw]" />
                   <div className="leading-none">
-                    <div className="font-extrabold uppercase text-[#70E6F5]" style={{ fontSize: `${0.6 * fontScale}rem` }}>{clock.country}</div>
-                    <div className="mt-1 font-extrabold text-white" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: `${0.9 * fontScale}rem` }}>
+                    <div className="font-extrabold uppercase text-[#70E6F5]" style={{ fontSize: `${0.55 * fontScale}rem` }}>{clock.country}</div>
+                    <div className="mt-1 font-extrabold text-white" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: `${0.85 * fontScale}rem` }}>
                       <ClockTime timezone={clock.timezone} />
                     </div>
                   </div>
@@ -466,7 +471,8 @@ const AuthenticatedHome: React.FC = () => {
             <MetalSpotCard metal="gold" quote={liveRates?.ouncePriceUsd} loading={isLoading} />
             <MetalSpotCard metal="silver" quote={liveRates?.silverOuncePriceUsd} loading={isLoading} />
             
-            <div className="bg-[#0c121c] border border-white/10 rounded-2xl flex items-center overflow-hidden w-full" style={{ height: "6vh" }}>
+            {/* Market Status Row */}
+            <div className="h-[5vh] shrink-0 bg-[#0c121c] border border-white/10 rounded-2xl flex items-center overflow-hidden w-full">
               <div className="ticker-track-slow font-extrabold tracking-widest flex items-center h-full" style={{ color: !isMarketClosed ? DASHBOARD.green : DASHBOARD.red, fontSize: `${0.9 * fontScale}rem`, lineHeight: 1 }}>
                 {Array.from({ length: 12 }).map((_, i) => (
                   <span key={i} className="pr-[4vw] flex items-center">
@@ -480,26 +486,26 @@ const AuthenticatedHome: React.FC = () => {
         </main>
 
         {/* FOOTER */}
-        <footer className="mt-[2vh] flex items-center px-[2vw] border-t border-white/10 bg-[#000000]/80 rounded-2xl w-full shadow-2xl shrink-0" style={{ height: "8vh" }}>
+        <footer className="mt-[1.5vh] flex items-center px-[2vw] border-t border-white/10 bg-[#000000]/80 rounded-2xl w-full shadow-2xl shrink-0" style={{ height: "7.5vh" }}>
           <div className="flex items-center gap-[1vw] shrink-0">
-            <svg className="w-[1.2vw] h-[1.2vw]" viewBox="0 0 24 24" fill="none" stroke={DASHBOARD.textMuted} strokeWidth="2">
+            <svg className="w-[1.1vw] h-[1.1vw]" viewBox="0 0 24 24" fill="none" stroke={DASHBOARD.textMuted} strokeWidth="2">
               <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
             </svg>
-            <span className="text-white/80" style={{ fontSize: `${0.8 * fontScale}rem` }}>Prices are indicative.</span>
+            <span className="text-white/80" style={{ fontSize: `${0.75 * fontScale}rem` }}>Prices are indicative.</span>
           </div>
 
-          <div className="w-px h-[4vh] bg-white/20 mx-[2vw] shrink-0" />
+          <div className="w-px h-[3vh] bg-white/20 mx-[2vw] shrink-0" />
 
           <div className="flex-1 overflow-hidden flex items-center gap-[1vw]">
-            <span className="font-bold shrink-0" style={{ color: DASHBOARD.goldBright, fontSize: `${0.9 * fontScale}rem` }}>GOLD NEWS:</span>
+            <span className="font-bold shrink-0" style={{ color: DASHBOARD.goldBright, fontSize: `${0.85 * fontScale}rem` }}>GOLD NEWS:</span>
             <div className="overflow-hidden flex-1" style={{ maskImage: "linear-gradient(90deg, transparent, black 5%, black 95%, transparent)" }}>
-              <div className="ticker-track-slow text-white flex items-center h-full" style={{ fontSize: `${0.9 * fontScale}rem`, lineHeight: 1 }}>
+              <div className="ticker-track-slow text-white flex items-center h-full" style={{ fontSize: `${0.85 * fontScale}rem`, lineHeight: 1 }}>
                 <span>Global markets steady as investors await key economic data... ◆ Silver demand rises on industrial sector growth... ◆ UAE gold market sees strong trading volumes... ◆ Central banks continue gold reserve accumulation... &nbsp;&nbsp;&nbsp;</span>
               </div>
             </div>
           </div>
 
-          <div className="w-px h-[4vh] bg-white/20 mx-[2vw] shrink-0" />
+          <div className="w-px h-[3vh] bg-white/20 mx-[2vw] shrink-0" />
 
           <span className="font-extrabold uppercase" style={{ fontFamily: "'Barlow Condensed', sans-serif", color: DASHBOARD.goldBright, fontSize: `${1.1 * fontScale}rem` }}>
             {uaeTime}
